@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json;
 using NJsonSchema;
@@ -33,6 +35,15 @@ namespace OdataCoreTemplate
         public void ConfigureServices(IServiceCollection services)
         {
 			services.AddDbContext<ApiContext>(opt => opt.UseInMemoryDatabase("ApiDb"));
+
+			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+			.AddJwtBearer(options => {
+				options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
+        options.TokenValidationParameters = new TokenValidationParameters {
+            ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(',')
+        };
+			});
+
 			services.AddMvc()
 				.AddJsonOptions(options => {
 					options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
@@ -59,7 +70,9 @@ namespace OdataCoreTemplate
 				// settings.GeneratorSettings.SerializerSettings.
 			});
 
-			app.UseMvc(b => {
+      app.UseAuthentication();
+
+      app.UseMvc(b => {
 				b.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
 				b.MapODataServiceRoute("ODataRoute", "odata", GetEdmModel());
 				b.EnableDependencyInjection();
