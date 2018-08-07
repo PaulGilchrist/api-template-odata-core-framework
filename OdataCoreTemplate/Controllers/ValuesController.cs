@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ODataCoreTemplate.Controllers
@@ -11,10 +13,11 @@ namespace ODataCoreTemplate.Controllers
     public class ValuesController : ControllerBase
     {
         // GET api/values
+        [Authorize]
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
-        {
-            return new string[] { "value1", "value2" };
+        public ActionResult<IEnumerable<string>> Get() {
+            return User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
+            //return new string[] { "value1", "value2" };
         }
 
         // GET api/values/5
