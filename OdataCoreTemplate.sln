@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27703.2042
+VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OdataCoreTemplate", "OdataCoreTemplate\OdataCoreTemplate.csproj", "{89101DC2-3C96-46F3-AC77-F2042809142F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ODataCoreTemplate", "ODataCoreTemplate\ODataCoreTemplate.csproj", "{6F615B38-6840-4DFB-B3B7-4796E6F6C1BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{89101DC2-3C96-46F3-AC77-F2042809142F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{89101DC2-3C96-46F3-AC77-F2042809142F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{89101DC2-3C96-46F3-AC77-F2042809142F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{89101DC2-3C96-46F3-AC77-F2042809142F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F615B38-6840-4DFB-B3B7-4796E6F6C1BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F615B38-6840-4DFB-B3B7-4796E6F6C1BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F615B38-6840-4DFB-B3B7-4796E6F6C1BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F615B38-6840-4DFB-B3B7-4796E6F6C1BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {04A063CA-F8D1-42A5-A2B9-FC4FB4318304}
+		SolutionGuid = {F2D4F0D8-0E53-4A2D-820F-B63D293D7455}
 	EndGlobalSection
 EndGlobal
