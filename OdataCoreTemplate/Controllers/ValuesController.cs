@@ -18,7 +18,9 @@ namespace OdataCoreTemplate.Controllers
         [Authorize]
         [HttpGet]
         public IEnumerable<string> Get() {
-          return User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
+          // Return all roles contained within the Bearer token's 'role' claim
+          var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
+          return roles;
           // return new string[] { "value1", "value2" };
         }
 
