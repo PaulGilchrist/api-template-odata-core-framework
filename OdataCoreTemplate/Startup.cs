@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -15,10 +16,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace ODataCoreTemplate
 {
@@ -47,6 +50,23 @@ namespace ODataCoreTemplate
                      new Newtonsoft.Json.Serialization.DefaultContractResolver();
                  });
             services.AddOData();
+            // Workaround to support OData and Swashbuckle working together: https://github.com/OData/WebApi/issues/1177
+            services.AddMvcCore(options => {
+                foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
+                    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                }
+                foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
+                    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                }
+            });
+            // Register the Swagger generator, defining 1 or more Swagger documents
+            services.AddSwaggerGen(c => {
+                c.SwaggerDoc("v1", new Info {
+                    Title = "OData Core Template",
+                    Description = "A simple example ASP.NET Core Web API leveraging OData, OAuth, and Swagger/Open API",
+                    Version = "v1"
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -60,6 +80,14 @@ namespace ODataCoreTemplate
             loggerFactory.AddDebug();
             app.UseHttpsRedirection();
             app.UseAuthentication();
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "OData Core Template API v1");
+                //c.RoutePrefix = string.Empty;
+            });
             app.UseMvc(b => {
                 b.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
                 b.MapODataServiceRoute("ODataRoute", "odata", GetEdmModel());

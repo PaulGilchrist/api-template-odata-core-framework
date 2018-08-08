@@ -2,7 +2,6 @@
 using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-//using NSwag.Annotations;
 using OdataCoreTemplate.Data;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
@@ -38,7 +37,6 @@ public class UsersController : ODataController {
     [EnableQuery]
     [HttpGet]
     [ODataRoute("users")]
-    //[SwaggerResponseAttribute(typeof(IEnumerable<User>))]
 
     public async Task<IActionResult> Get() {
         var users = _db.Users;
@@ -56,7 +54,6 @@ public class UsersController : ODataController {
     [EnableQuery]
     [HttpGet]
     [ODataRoute("users({id})")]
-    //[SwaggerResponseAttribute(typeof(IEnumerable<User>))]
     public async Task<IActionResult> GetUser([FromODataUri] int id) {
         User user = await _db.Users.FindAsync(id);
         if (user == null) {
@@ -73,14 +70,13 @@ public class UsersController : ODataController {
     [EnableQuery]
     [HttpPost]
     [ODataRoute("users")]
-    //[SwaggerResponseAttribute(typeof(void))]
     public async Task<IActionResult> Post([FromBody] User user) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
         }
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
-        return Created(user);
+        return Created("", user);
     }
 
 

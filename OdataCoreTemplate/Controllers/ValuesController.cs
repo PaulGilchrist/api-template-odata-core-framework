@@ -13,11 +13,11 @@ namespace ODataCoreTemplate.Controllers
     public class ValuesController : ControllerBase
     {
         // GET api/values
-        [Authorize]
+        // [Authorize]
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get() {
-            return User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
-            //return new string[] { "value1", "value2" };
+            // return User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
+            return new string[] { "value1", "value2" };
         }
 
         // GET api/values/5
