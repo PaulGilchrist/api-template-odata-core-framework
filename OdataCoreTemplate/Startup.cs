@@ -1,30 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNet.OData.Builder;
+﻿using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json;
+using OdataCoreTemplate.Classes;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.Swagger;
+using System.Linq;
 
-namespace ODataCoreTemplate
-{
+namespace ODataCoreTemplate {
     public class Startup
     {
         public Startup(IConfiguration configuration) {
@@ -43,12 +38,6 @@ namespace ODataCoreTemplate
                        ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(',')
                    };
                });
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-	            .AddJsonOptions(options => {
-                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                     options.SerializerSettings.ContractResolver =
-                     new Newtonsoft.Json.Serialization.DefaultContractResolver();
-                 });
             services.AddOData();
             // Workaround to support OData and Swashbuckle working together: https://github.com/OData/WebApi/issues/1177
             services.AddMvcCore(options => {
@@ -58,7 +47,13 @@ namespace ODataCoreTemplate
                 foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
                     inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
                 }
-            });
+            }).AddApiExplorer();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddJsonOptions(options => {
+                    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    options.SerializerSettings.ContractResolver =
+                    new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                });
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => {
                 c.SwaggerDoc("v1", new Info {
@@ -66,6 +61,8 @@ namespace ODataCoreTemplate
                     Description = "A simple example ASP.NET Core Web API leveraging OData, OAuth, and Swagger/Open API",
                     Version = "v1"
                 });
+                // Workaround to show OData input parameters in Swashbuckle (waiting on Swashbuckle.AspNetCore.Odata NuGet package)
+                c.OperationFilter<SwaggerODataOperationFilter>();
             });
         }
 
@@ -82,8 +79,7 @@ namespace ODataCoreTemplate
             app.UseAuthentication();
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-            // specifying the Swagger JSON endpoint.
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "OData Core Template API v1");
                 //c.RoutePrefix = string.Empty;
