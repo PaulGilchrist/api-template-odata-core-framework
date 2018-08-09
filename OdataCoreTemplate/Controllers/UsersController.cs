@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +17,10 @@ using System.Threading.Tasks;
 [ODataController(typeof(User))]
 
 /* Current Issues:
-    Swagger will not read the /// <summary> or /// <remarks> comments
-    Routes will not use OData native format of /users(id), rather than users/id
+*      Routes will not use OData native format of /users(id), rather than users/id
+*    
+*  Example on how to get an string[] of roles from the user's token 
+*      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
 public class UsersController : Controller {
@@ -48,7 +51,8 @@ public class UsersController : Controller {
     }
 
     /// <summary>Query users by id</summary>
-    [HttpGet("{id}", Name = "The user id")]
+    /// <param name="id">The user id</param>
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)] // Not Found
     [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
@@ -61,11 +65,15 @@ public class UsersController : Controller {
     }
 
     /// <summary>Create a new user</summary>
-    /// <param name="user">A full user object.  Every property will be updated except id.</param>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="user">A full user object</param>
     [HttpPost]
     [ProducesResponseType(typeof(User), 201)] // Created
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
+    //[Authorize]
     public async Task<IActionResult> Post([FromBody] User user) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
@@ -76,12 +84,17 @@ public class UsersController : Controller {
     }
 
     /// <summary>Edit the user with the given id</summary>
-    /// <param name="user">A partial user object.  Only properties supplied will be updated.</param>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="id">The user id</param>
+    /// <param name="userDelta">A partial user object.  Only properties supplied will be updated.</param>
     [HttpPatch("{id}")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
+    //[Authorize]
     public async Task<IActionResult> Patch(int id, [FromBody] Delta<User> userDelta) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
@@ -98,11 +111,17 @@ public class UsersController : Controller {
     }
 
     /// <summary>Replace all data for the user with the given id</summary>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="id">The user id</param>
+    /// <param name="user">A full user object.  Every property will be updated except id.</param>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
+    //[Authorize]
     public async Task<IActionResult> Put(int id, [FromBody] Delta<User> user) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
@@ -117,10 +136,15 @@ public class UsersController : Controller {
     }
 
     /// <summary>Delete the given user</summary>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="id">The user id</param>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
+    //[Authorize]
     public async Task<IActionResult> Delete(int id) {
         User user = await _db.Users.FindAsync(id);
         if (user == null) {
@@ -130,5 +154,6 @@ public class UsersController : Controller {
         await _db.SaveChangesAsync();
         return NoContent();
     }
+
 
 }

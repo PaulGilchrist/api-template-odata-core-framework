@@ -17,7 +17,10 @@ using OdataCoreTemplate.Classes;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.Swagger;
+using System;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace ODataCoreTemplate {
     public class Startup
@@ -63,6 +66,10 @@ namespace ODataCoreTemplate {
                 });
                 // Workaround to show OData input parameters in Swashbuckle (waiting on Swashbuckle.AspNetCore.Odata NuGet package)
                 c.OperationFilter<SwaggerODataOperationFilter>();
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
         }
 
