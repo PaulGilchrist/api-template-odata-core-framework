@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.OData;
+using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,11 @@ using System.Threading.Tasks;
 
 [Route("odata/users")]
 [ODataController(typeof(User))]
+
+/* Current Issues:
+    Swagger will not read the /// <summary> or /// <remarks> comments
+    Routes will not use OData native format of /users(id), rather than users/id
+*/
 
 public class UsersController : Controller {
     private ApiContext _db;
@@ -45,7 +51,7 @@ public class UsersController : Controller {
     [HttpGet("{id}", Name = "The user id")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)] // Not Found
-    //[EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
+    [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
     public async Task<IActionResult> GetUser(int id) {
         User user = await _db.Users.FindAsync(id);
         if (user == null) {
