@@ -105,7 +105,7 @@ public class AddressesController : Controller {
     /// Make sure to secure this action before production release
     /// </remarks>
     /// <param name="id">The address id</param>
-    /// <param name="user">A full address object.  Every property will be updated except id.</param>
+    /// <param name="address">A full address object.  Every property will be updated except id.</param>
     [HttpPut]
     [Route("odata/addresses({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok

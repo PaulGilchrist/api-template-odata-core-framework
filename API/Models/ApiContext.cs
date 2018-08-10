@@ -25,6 +25,7 @@ namespace OdataCoreTemplate.Models {
             foreach (var b in MockData.GetAddresses()) {
                 Addresses.Add(b);
             }
+            // ToDo - Add some User to Address associations here
             SaveChangesAsync();
         }
 

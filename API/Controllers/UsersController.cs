@@ -4,21 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using OdataCoreTemplate.Classes;
-using OdataCoreTemplate.Data;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-[ODataController(typeof(User))]
 
 /*   
 *  Example on how to get an string[] of roles from the user's token 
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
+[ODataController(typeof(User))]
 public class UsersController : Controller {
     private ApiContext _db;
 
