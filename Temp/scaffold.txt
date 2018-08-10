@@ -1,0 +1,1 @@
+Scaffold-DbContext "data source=localhost;initial catalog=ApiDev;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models

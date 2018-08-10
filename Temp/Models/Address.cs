@@ -25,7 +25,7 @@ namespace ODataCoreTemplate.Models {
 
         public string Suite { get; set; }
 
-        public List<User> Users { get; set; } = new List<User>();
+        public List<User> Users { get; set; }
 
     }
 }

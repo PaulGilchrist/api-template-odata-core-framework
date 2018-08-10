@@ -28,11 +28,8 @@ public class AddressesController : Controller {
     public AddressesController(ApiContext context) {
         _db = context;
         // Populate the database if it is empty
-        if (context.Addresses.Count() == 0) {
-            foreach (var b in MockData.GetAddresses()) {
-                context.Addresses.Add(b);
-            }
-            context.SaveChanges();
+        if (context.Users.Count() == 0) {
+            _db.AddMockData();
         }
     }
 
@@ -152,5 +149,73 @@ public class AddressesController : Controller {
         return NoContent();
     }
 
+    /// <summary>Get the users for the address with the given id</summary>
+    /// <param name="id">The address id</param>
+    [HttpGet]
+    [Route("{id}/users")]
+    [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
+    [ProducesResponseType(typeof(void), 404)]  // Not Found
+    [EnableQuery]
+    public IQueryable<User> GetUsers(int id) {
+        return _db.Addresses.Where(m => m.Id == id).SelectMany(m => m.Users);
+    }
+
+
+    /// <summary>Associate a user to the address with the given id</summary>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="id">The user id</param>
+    /// <param name="userId">The user id to associate with the address</param>
+    [HttpPost]
+    [Route("{id}/users/{userId}")]
+    [ProducesResponseType(typeof(void), 204)] // No Content
+    [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+    [ProducesResponseType(typeof(void), 401)] // Unauthorized
+    [ProducesResponseType(typeof(void), 404)] // Not Found
+    //[Authorize]
+    public async Task<IActionResult> LinkAddresses(int id, int userId) {
+        Address address = await _db.Addresses.FindAsync(id);
+        if (address == null) {
+            return NotFound();
+        }
+        if (address.Users.Any(i => i.Id == userId)) {
+            return BadRequest(string.Format("The address with id {0} is already linked to the user with id {1}", id, userId));
+        }
+        User user = await _db.Users.FindAsync(userId);
+        if (user == null) {
+            return NotFound();
+        }
+        address.Users.Add(user);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+
+    /// <summary>Remove an user association from the address with the given id</summary>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="id">The address id</param>
+    /// <param name="userId">The user id to remove association from the address</param>
+    [HttpDelete]
+    [Route("{id}/users/{userId}")]
+    [ProducesResponseType(typeof(void), 204)] // No Content
+    [ProducesResponseType(typeof(void), 401)] // Unauthorized
+    [ProducesResponseType(typeof(void), 404)] // Not Found
+    // [Authorize]
+    public async Task<IActionResult> UnlinkAddresses(int id, int userId) {
+        Address address = await _db.Addresses.FindAsync(id);
+        if (address == null) {
+            return NotFound();
+        }
+        User user = await _db.Users.FindAsync(userId);
+        if (user == null) {
+            return NotFound();
+        }
+        address.Users.Remove(user);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 
 }

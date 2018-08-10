@@ -33,11 +33,14 @@ namespace ODataCoreTemplate {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
+            // To make this demo simpler, we can use a memory only database populated with mock data
             services.AddDbContext<ApiContext>(opt => opt.UseInMemoryDatabase("ApiDb"));
+
             // For this demo we are using an in-memory database, but later we will connect to an actual database
             // https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
-            // var connection = @"Server=(localdb)\mssqllocaldb;Database=ApiDb.AspNetCore.NewDb;Trusted_Connection=True;ConnectRetryCount=0";
-            // services.AddDbContext<ApiContext>(options => options.UseSqlServer(connection));
+            //var connection = @"data source=localhost;initial catalog=ApiDev;integrated security=True;MultipleActiveResultSets=True;ConnectRetryCount=3";
+            //services.AddDbContext<ApiContext>(options => options.UseSqlServer(connection));
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");

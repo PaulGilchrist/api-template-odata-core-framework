@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using OdataCoreTemplate.Data;
 using ODataCoreTemplate.Models;
-using System.Threading.Tasks;
 
 namespace OdataCoreTemplate.Models {
     public class ApiContext : DbContext {
@@ -16,17 +14,5 @@ namespace OdataCoreTemplate.Models {
             modelBuilder.Entity<Address>().HasMany(u => u.Users);
             modelBuilder.Entity<User>().HasMany(u => u.Addresses);
         }
-
-        public void AddMockData() {
-            // Populate the database if it is empty
-            foreach (var b in MockData.GetUsers()) {
-                Users.Add(b);
-            }
-            foreach (var b in MockData.GetAddresses()) {
-                Addresses.Add(b);
-            }
-            SaveChangesAsync();
-        }
-
     }
 }
