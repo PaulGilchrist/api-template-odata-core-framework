@@ -7,10 +7,12 @@ namespace OdataCoreTemplate.Models {
              : base(options) {
         }
 
+        public DbSet<Address> Addresses { get; set; }
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
-            //modelBuilder.Entity<User>().HasMany(u => u.Addresses);
+            modelBuilder.Entity<Address>().HasMany(u => u.Users);
+            modelBuilder.Entity<User>().HasMany(u => u.Addresses);
         }
     }
 }

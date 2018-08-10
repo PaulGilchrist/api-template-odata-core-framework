@@ -3,7 +3,6 @@ using Microsoft.AspNet.OData.Query;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace OdataCoreTemplate.Classes {

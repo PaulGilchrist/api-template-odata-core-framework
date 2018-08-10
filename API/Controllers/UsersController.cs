@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +29,7 @@ public class UsersController : Controller {
         _db = context;
         // Populate the database if it is empty
         if (context.Users.Count() == 0) {
-            foreach (var b in DataSource.GetUsers()) {
+            foreach (var b in MockData.GetUsers()) {
                 context.Users.Add(b);
             }
             context.SaveChanges();
@@ -56,7 +55,7 @@ public class UsersController : Controller {
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)] // Not Found
     [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
-    public async Task<IActionResult> GetUser(int id) {
+    public async Task<IActionResult> GetSingle(int id) {
         User user = await _db.Users.FindAsync(id);
         if (user == null) {
             return NotFound();
@@ -103,8 +102,6 @@ public class UsersController : Controller {
         if (dbUser == null) {
             return NotFound();
         }
-        dbUser.LastModifiedDate = DateTime.Now;
-        dbUser.LastModifiedBy = User.Identity.Name;
         userDelta.Patch(dbUser);
         await _db.SaveChangesAsync();
         return Ok(dbUser);

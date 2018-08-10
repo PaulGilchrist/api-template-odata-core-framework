@@ -34,6 +34,10 @@ namespace ODataCoreTemplate {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             services.AddDbContext<ApiContext>(opt => opt.UseInMemoryDatabase("ApiDb"));
+            // For this demo we are using an in-memory database, but later we will connect to an actual database
+            // https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
+            // var connection = @"Server=(localdb)\mssqllocaldb;Database=ApiDb.AspNetCore.NewDb;Trusted_Connection=True;ConnectRetryCount=0";
+            // services.AddDbContext<ApiContext>(options => options.UseSqlServer(connection));
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
@@ -54,8 +58,7 @@ namespace ODataCoreTemplate {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => {
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                    options.SerializerSettings.ContractResolver =
-                    new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
                 });
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => {
