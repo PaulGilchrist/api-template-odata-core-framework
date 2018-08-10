@@ -21,7 +21,7 @@ public class AddressesController : Controller {
         _db = context;
         // Populate the database if it is empty
         if (context.Users.Count() == 0) {
-            _db.AddMockData();
+            _db.AddMockDataAsync();
         }
     }
 

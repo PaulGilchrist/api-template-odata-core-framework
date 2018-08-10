@@ -130,7 +130,5 @@
       <AnsiNulls>On</AnsiNulls>
     </Build>
     <None Include="MockData\MockData.sql" />
-    <Build Include="dbo\Tables\Images.sql" />
-    <Build Include="dbo\Tables\UserImageAssociations.sql" />
   </ItemGroup>
 </Project>
