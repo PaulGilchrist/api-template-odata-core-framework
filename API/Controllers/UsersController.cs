@@ -12,12 +12,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-[Route("odata/users")]
 [ODataController(typeof(User))]
 
-/* Current Issues:
-*      Routes will not use OData native format of /users(id), rather than users/id
-*    
+/*   
 *  Example on how to get an string[] of roles from the user's token 
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
@@ -35,6 +32,7 @@ public class UsersController : Controller {
 
     /// <summary>Query users</summary>
     [HttpGet]
+    [Route("odata/users")]
     [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)]  // Not Found
     [EnableQuery]
@@ -48,7 +46,8 @@ public class UsersController : Controller {
 
     /// <summary>Query users by id</summary>
     /// <param name="id">The user id</param>
-    [HttpGet("{id}")]
+    [HttpGet]
+    [Route("odata/users({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)] // Not Found
     [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
@@ -66,6 +65,7 @@ public class UsersController : Controller {
     /// </remarks>
     /// <param name="user">A full user object</param>
     [HttpPost]
+    [Route("odata/users")]
     [ProducesResponseType(typeof(User), 201)] // Created
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
@@ -85,7 +85,8 @@ public class UsersController : Controller {
     /// </remarks>
     /// <param name="id">The user id</param>
     /// <param name="userDelta">A partial user object.  Only properties supplied will be updated.</param>
-    [HttpPatch("{id}")]
+    [HttpPatch]
+    [Route("odata/users({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
@@ -110,7 +111,8 @@ public class UsersController : Controller {
     /// </remarks>
     /// <param name="id">The user id</param>
     /// <param name="user">A full user object.  Every property will be updated except id.</param>
-    [HttpPut("{id}")]
+    [HttpPut]
+    [Route("odata/users({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
@@ -134,7 +136,8 @@ public class UsersController : Controller {
     /// Make sure to secure this action before production release
     /// </remarks>
     /// <param name="id">The user id</param>
-    [HttpDelete("{id}")]
+    [HttpDelete]
+    [Route("odata/users({id})")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
@@ -153,7 +156,7 @@ public class UsersController : Controller {
     /// <summary>Get the addresses for the user with the given id</summary>
     /// <param name="id">The user id</param>
     [HttpGet]
-    [Route("{id}/addresses")]
+    [Route("odata/users({id})/addresses")]
     [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)]  // Not Found
     [EnableQuery]
@@ -168,7 +171,7 @@ public class UsersController : Controller {
     /// <param name="id">The user id</param>
     /// <param name="addressId">The address id to associate with the user</param>
     [HttpPost]
-    [Route("{id}/addresses/{addressId}")]
+    [Route("odata/users({id})/addresses({addressId})")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
@@ -199,7 +202,7 @@ public class UsersController : Controller {
     /// <param name="id">The user id</param>
     /// <param name="addressId">The address id to remove association from the user</param>
     [HttpDelete]
-    [Route("{id}/addresses/{addressId}")]
+    [Route("odata/users({id})/addresses({addressId})")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
