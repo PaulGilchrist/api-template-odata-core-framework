@@ -110,7 +110,8 @@ namespace ODataCoreTemplate {
             builder.Namespace = "ApiTemplate";
             builder.ContainerName = "ApiTemplateContainer";
             builder.EnableLowerCamelCase();
-            builder.EntitySet<User>("Users");
+            builder.EntitySet<User>("users");
+            builder.EntitySet<Address>("addresses");
             return builder.GetEdmModel();
         }
 
