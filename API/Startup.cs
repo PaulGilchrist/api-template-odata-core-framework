@@ -34,7 +34,7 @@ namespace ODataCoreTemplate {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             // To make this demo simpler, we can use a memory only database populated with mock data
-            services.AddDbContext<ApiContext>(opt => opt.UseInMemoryDatabase("ApiDb"));
+            services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
 
             // For this demo we are using an in-memory database, but later we will connect to an actual database
             // https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
@@ -62,6 +62,7 @@ namespace ODataCoreTemplate {
                 .AddJsonOptions(options => {
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+                    options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                 });
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => {
@@ -96,8 +97,10 @@ namespace ODataCoreTemplate {
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "OData Core Template API v1");
                 c.DocExpansion(DocExpansion.None);
-                //c.RoutePrefix = string.Empty;
             });
+            //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
+            var context = app.ApplicationServices.GetService<ApiDbContext>();
+            OdataCoreTemplate.Data.MockData.AddMockData(context);
             app.UseMvc(b => {
                 b.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
                 b.MapODataServiceRoute("ODataRoute", "odata", GetEdmModel());

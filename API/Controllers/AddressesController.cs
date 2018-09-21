@@ -15,14 +15,10 @@ using System.Threading.Tasks;
 [ODataController(typeof(Address))]
 
 public class AddressesController : Controller {
-    private ApiContext _db;
+    private OdataCoreTemplate.Models.ApiDbContext _db;
 
-    public AddressesController(ApiContext context) {
+    public AddressesController(OdataCoreTemplate.Models.ApiDbContext context) {
         _db = context;
-        // Populate the database if it is empty
-        if (context.Users.Count() == 0) {
-            _db.AddMockDataAsync();
-        }
     }
 
     /// <summary>Query addresses</summary>
@@ -113,7 +109,7 @@ public class AddressesController : Controller {
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     //[Authorize]
-    public async Task<IActionResult> Put(int id, [FromBody] Delta<Address> address) {
+    public async Task<IActionResult> Put(int id, [FromBody] Address address) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
         }
@@ -121,9 +117,9 @@ public class AddressesController : Controller {
         if (dbAddress == null) {
             return NotFound();
         }
-        address.Put(dbAddress);
+        _db.Addresses.Update(address);
         await _db.SaveChangesAsync();
-        return Ok(dbAddress);
+        return Ok(address);
     }
 
     /// <summary>Delete the given address</summary>

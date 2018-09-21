@@ -3,12 +3,49 @@ using ODataCoreTemplate.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OdataCoreTemplate.Data {
     public static class MockData {
         private static IList<User> _users { get; set; }
         private static IList<Address> _addresses { get; set; }
+
+        public static void AddMockData(ApiDbContext context) {
+            var userCount = context.Users.Count();
+            // Populate the database if it is empty
+            if (userCount == 0) {
+                Random rnd = new Random();
+                foreach (var user in MockData.GetUsers()) {
+                    context.Users.Add(user);
+                }
+                foreach (var address in MockData.GetAddresses()) {
+                    context.Addresses.Add(address);
+                }
+                context.SaveChanges();
+                userCount = context.Users.Count();
+                var addressCount = context.Addresses.Count();
+                // Associate 1 random address to every user
+                foreach (var user in context.Users) {
+                    int r = rnd.Next(addressCount);
+                    var address = context.Addresses.Find(r);
+                    if(address != null) {
+                        user.Addresses.Add(address);
+                        context.Users.Update(user);
+                    }
+                }
+                // Associate 1 random user to every address(means some users will have 2 addresses(a good thing)
+                foreach (var address in context.Addresses) {
+                    int r = rnd.Next(userCount);
+                    var user = context.Users.Find(r);
+                    if (user != null) {
+                        address.Users.Add(user);
+                        context.Addresses.Update(address);
+                    }
+                }
+                context.SaveChanges();
+            }
+        }
 
         public static IList<Address> GetAddresses() {
             if (_addresses != null) {

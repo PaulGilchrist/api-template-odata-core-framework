@@ -17,14 +17,10 @@ using System.Threading.Tasks;
 
 [ODataController(typeof(User))]
 public class UsersController : Controller {
-    private ApiContext _db;
+    private OdataCoreTemplate.Models.ApiDbContext _db;
 
-    public UsersController(ApiContext context) {
+    public UsersController(OdataCoreTemplate.Models.ApiDbContext context) {
         _db = context;
-        // Populate the database if it is empty
-        if (context.Users.Count() == 0) {
-            _db.AddMockDataAsync();
-        }
     }
 
     /// <summary>Query users</summary>
@@ -32,7 +28,7 @@ public class UsersController : Controller {
     [Route("odata/users")]
     [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)]  // Not Found
-    [EnableQuery]
+    [EnableQuery(MaxNodeCount = 100000)]
     public async Task<IActionResult> Get() {
         var users = _db.Users;
         if (!await users.AnyAsync()) {
@@ -115,7 +111,7 @@ public class UsersController : Controller {
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     //[Authorize]
-    public async Task<IActionResult> Put(int id, [FromBody] Delta<User> user) {
+    public async Task<IActionResult> Put(int id, [FromBody] User user) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
         }
@@ -123,9 +119,9 @@ public class UsersController : Controller {
         if (dbUser == null) {
             return NotFound();
         }
-        user.Put(dbUser);
+        _db.Users.Update(user);
         await _db.SaveChangesAsync();
-        return Ok(dbUser);
+        return Ok(user);
     }
 
     /// <summary>Delete the given user</summary>
