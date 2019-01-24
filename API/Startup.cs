@@ -17,6 +17,7 @@ using OdataCoreTemplate.Classes;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.IO;
 using System.Linq;
@@ -58,6 +59,9 @@ namespace ODataCoreTemplate {
                     inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
                 }
             }).AddApiExplorer();
+
+
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => {
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
