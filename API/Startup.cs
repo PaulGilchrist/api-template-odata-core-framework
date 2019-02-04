@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNet.OData.Builder;
+﻿using API.Classes;
+using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -50,23 +51,22 @@ namespace ODataCoreTemplate {
                    };
                });
             services.AddOData();
-            // Workaround to support OData and Swashbuckle working together: https://github.com/OData/WebApi/issues/1177
-            services.AddMvcCore(options => {
-                foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
-                    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
-                }
-                foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
-                    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
-                }
-            }).AddApiExplorer();
-
-
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+            services.AddMvc(options => {
+                    options.EnableEndpointRouting = false;
+                    //// Workaround to support OData and Swashbuckle working together: https://github.com/OData/WebApi/issues/1177
+                    //foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
+                    //    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                    //}
+                    //foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
+                    //    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                    //}
+                })
+                .SetCompatibilityVersion(CompatibilityVersion.Latest)
                 .AddJsonOptions(options => {
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => {
@@ -95,6 +95,16 @@ namespace ODataCoreTemplate {
             loggerFactory.AddDebug();
             app.UseHttpsRedirection();
             app.UseAuthentication();
+            //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
+            var context = app.ApplicationServices.GetService<ApiDbContext>();
+            OdataCoreTemplate.Data.MockData.AddMockData(context);
+            app.UseMvc(b => {
+                b.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
+                // Swagger will not find controllers using conventional routing.  Attribute routing is required.
+                // Also, OData controller base class opts out of the API Explorer
+                b.MapODataServiceRoute("ODataRoute", "odata", GetEdmModel(app.ApplicationServices));
+                b.EnableDependencyInjection();
+            });
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
             // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), specifying the Swagger JSON endpoint.
@@ -102,23 +112,33 @@ namespace ODataCoreTemplate {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "OData Core Template API v1");
                 c.DocExpansion(DocExpansion.None);
             });
-            //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
-            var context = app.ApplicationServices.GetService<ApiDbContext>();
-            OdataCoreTemplate.Data.MockData.AddMockData(context);
-            app.UseMvc(b => {
-                b.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
-                b.MapODataServiceRoute("ODataRoute", "odata", GetEdmModel());
-                b.EnableDependencyInjection();
-            });
         }
 
-        private static IEdmModel GetEdmModel() {
+        private static IEdmModel GetEdmModel(IServiceProvider applicationServices) {
             ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
             builder.Namespace = "ApiTemplate";
             builder.ContainerName = "ApiTemplateContainer";
             builder.EnableLowerCamelCase();
-            builder.EntitySet<User>("users");
-            builder.EntitySet<Address>("addresses");
+            builder.EntitySet<User>("users")
+                .EntityType
+                .Filter()
+                .Count()
+                .Expand()
+                .OrderBy()
+                .Page()
+                .Select()
+                .HasMany(u => u.Addresses)
+                .Expand();
+            builder.EntitySet<Address>("addresses")
+                .EntityType
+                .Filter()
+                .Count()
+                .Expand()
+                .OrderBy()
+                .Page()
+                .Select()
+                .HasMany(a => a.Users)
+                .Expand();
             return builder.GetEdmModel();
         }
 

@@ -14,7 +14,7 @@ namespace OdataCoreTemplate.Models {
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
-            modelBuilder.Entity<Address>().HasMany(u => u.Users);
+            modelBuilder.Entity<Address>().HasMany(a => a.Users);
             modelBuilder.Entity<User>().HasMany(u => u.Addresses);
         }
 

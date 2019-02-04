@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
+using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-[ODataController(typeof(Address))]
-
-public class AddressesController : Controller {
+//[ODataController(typeof(Address))]
+[ODataRoutePrefix("addresses")]
+public class AddressesController : ODataController {
     private OdataCoreTemplate.Models.ApiDbContext _db;
 
     public AddressesController(OdataCoreTemplate.Models.ApiDbContext context) {
@@ -23,7 +24,7 @@ public class AddressesController : Controller {
 
     /// <summary>Query addresses</summary>
     [HttpGet]
-    [Route("odata/addresses")]
+    [ODataRoute("")]
     [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)]  // Not Found
     [EnableQuery]
@@ -38,11 +39,11 @@ public class AddressesController : Controller {
     /// <summary>Query addresses by id</summary>
     /// <param name="id">The address id</param>
     [HttpGet]
-    [Route("odata/addresses({id})")]
+    [ODataRoute("({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)] // Not Found
     [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
-    public async Task<IActionResult> GetSingle(int id) {
+    public async Task<IActionResult> GetSingle([FromQuery] int id) {
         Address address = await _db.Addresses.FindAsync(id);
         if (address == null) {
             return NotFound();
@@ -56,7 +57,7 @@ public class AddressesController : Controller {
     /// </remarks>
     /// <param name="address">A full address object</param>
     [HttpPost]
-    [Route("odata/addresses")]
+    [ODataRoute("")]
     [ProducesResponseType(typeof(User), 201)] // Created
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
@@ -77,13 +78,13 @@ public class AddressesController : Controller {
     /// <param name="id">The address id</param>
     /// <param name="addressDelta">A partial address object.  Only properties supplied will be updated.</param>
     [HttpPatch]
-    [Route("odata/addresses({id})")]
+    [ODataRoute("({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     //[Authorize]
-    public async Task<IActionResult> Patch(int id, [FromBody] Delta<Address> addressDelta) {
+    public async Task<IActionResult> Patch([FromQuery] int id, [FromBody] Delta<Address> addressDelta) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
         }
@@ -103,13 +104,13 @@ public class AddressesController : Controller {
     /// <param name="id">The address id</param>
     /// <param name="address">A full address object.  Every property will be updated except id.</param>
     [HttpPut]
-    [Route("odata/addresses({id})")]
+    [ODataRoute("({id})")]
     [ProducesResponseType(typeof(User), 200)] // Ok
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     //[Authorize]
-    public async Task<IActionResult> Put(int id, [FromBody] Address address) {
+    public async Task<IActionResult> Put([FromQuery] int id, [FromBody] Address address) {
         if (!ModelState.IsValid) {
             return BadRequest(ModelState);
         }
@@ -128,12 +129,12 @@ public class AddressesController : Controller {
     /// </remarks>
     /// <param name="id">The address id</param>
     [HttpDelete]
-    [Route("odata/addresses({id})")]
+    [ODataRoute("({id})")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     //[Authorize]
-    public async Task<IActionResult> Delete(int id) {
+    public async Task<IActionResult> Delete([FromQuery] int id) {
         Address address = await _db.Addresses.FindAsync(id);
         if (address == null) {
             return NotFound();
@@ -146,11 +147,11 @@ public class AddressesController : Controller {
     /// <summary>Get the users for the address with the given id</summary>
     /// <param name="id">The address id</param>
     [HttpGet]
-    [Route("odata/addresses({id})/users")]
+    [ODataRoute("({id})/users")]
     [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
     [ProducesResponseType(typeof(void), 404)]  // Not Found
     [EnableQuery]
-    public IQueryable<User> GetUsers(int id) {
+    public IQueryable<User> GetUsers([FromQuery] int id) {
         return _db.Addresses.Where(m => m.Id == id).SelectMany(m => m.Users);
     }
 
@@ -162,13 +163,13 @@ public class AddressesController : Controller {
     /// <param name="id">The user id</param>
     /// <param name="userId">The user id to associate with the address</param>
     [HttpPost]
-    [Route("odata/addresses({id})/users({userId})")]
+    [ODataRoute("({id})/users({userId})")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     //[Authorize]
-    public async Task<IActionResult> LinkAddresses(int id, int userId) {
+    public async Task<IActionResult> LinkAddresses([FromQuery] int id, [FromQuery] int userId) {
         Address address = await _db.Addresses.FindAsync(id);
         if (address == null) {
             return NotFound();
@@ -193,12 +194,12 @@ public class AddressesController : Controller {
     /// <param name="id">The address id</param>
     /// <param name="userId">The user id to remove association from the address</param>
     [HttpDelete]
-    [Route("odata/addresses({id})/users({userId})")]
+    [ODataRoute("({id})/users({userId})")]
     [ProducesResponseType(typeof(void), 204)] // No Content
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     [ProducesResponseType(typeof(void), 404)] // Not Found
     // [Authorize]
-    public async Task<IActionResult> UnlinkAddresses(int id, int userId) {
+    public async Task<IActionResult> UnlinkAddresses([FromQuery] int id, [FromQuery] int userId) {
         Address address = await _db.Addresses.FindAsync(id);
         if (address == null) {
             return NotFound();
