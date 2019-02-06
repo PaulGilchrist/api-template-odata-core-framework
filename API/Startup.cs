@@ -1,17 +1,18 @@
 ﻿using API.Classes;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
-using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json;
 using OdataCoreTemplate.Classes;
@@ -68,6 +69,7 @@ namespace ODataCoreTemplate {
                     options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
+            services.AddHttpContextAccessor();
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => {
                 c.SwaggerDoc("v1", new Info {
@@ -85,19 +87,22 @@ namespace ODataCoreTemplate {
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory) {
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor httpContextAccessor) {
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             } else {
                 app.UseHsts();
             }
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
+            //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            //loggerFactory.AddDebug();
             app.UseHttpsRedirection();
             app.UseAuthentication();
             //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
             var context = app.ApplicationServices.GetService<ApiDbContext>();
             OdataCoreTemplate.Data.MockData.AddMockData(context);
+            //Add custom telemetry initializer to add user name from the HTTP context
+            var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
+            configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseMvc(b => {
                 b.Select().Expand().Filter().OrderBy().MaxTop(100).Count();
                 // Swagger will not find controllers using conventional routing.  Attribute routing is required.
