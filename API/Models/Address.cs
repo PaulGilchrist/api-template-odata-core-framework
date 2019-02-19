@@ -1,7 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNet.OData;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ODataCoreTemplate.Models {
+    public class DeltaAddressList {
+        public List<Delta<Address>> value { get; set; }
+    }
+
+    public class AddressList {
+        public List<Address> value { get; set; }
+    }
+
     public class Address {
         [Key]
         public int Id { get; set; }

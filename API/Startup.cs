@@ -1,8 +1,8 @@
 ﻿using API.Classes;
-using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,9 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OData.Edm;
 using Newtonsoft.Json;
-using OdataCoreTemplate.Classes;
 using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.Swagger;
@@ -54,15 +54,15 @@ namespace ODataCoreTemplate {
             services.AddOData();
             services.AddMvc(options => {
                     options.EnableEndpointRouting = false;
-                    //// Workaround to support OData and Swashbuckle working together: https://github.com/OData/WebApi/issues/1177
-                    //foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
-                    //    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
-                    //}
-                    //foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
-                    //    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
-                    //}
-                })
-                .SetCompatibilityVersion(CompatibilityVersion.Latest)
+                // Workaround to support OData and Swashbuckle working together: https://github.com/OData/WebApi/issues/1177
+                foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
+                    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                }
+                foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0)) {
+                    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                }
+            })
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddJsonOptions(options => {
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
@@ -77,8 +77,6 @@ namespace ODataCoreTemplate {
                     Description = "A simple example ASP.NET Core Web API leveraging OData, OAuth, and Swagger/Open API",
                     Version = "v1"
                 });
-                // Workaround to show OData input parameters in Swashbuckle (waiting on Swashbuckle.AspNetCore.Odata NuGet package)
-                c.OperationFilter<SwaggerODataOperationFilter>();
                 // Set the comments path for the Swagger JSON and UI.
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

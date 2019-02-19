@@ -1,12 +1,9 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNet.OData;
+﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using OdataCoreTemplate.Classes;
-using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +14,6 @@ using System.Threading.Tasks;
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
-//[ODataController(typeof(User))]
 [Produces("application/json")]
 [ODataRoutePrefix("users")]
 public class UsersController : ODataController {
@@ -57,24 +53,57 @@ public class UsersController : ODataController {
         return Ok(user);
     }
 
-    /// <summary>Create a new user</summary>
+    /// <summary>Create one or more new users</summary>
     /// <remarks>
     /// Make sure to secure this action before production release
     /// </remarks>
-    /// <param name="user">A full user object</param>
+    /// <param name="userList">An object containing an array of full user objects</param>
     [HttpPost]
     [ODataRoute("")]
-    [ProducesResponseType(typeof(User), 201)] // Created
+    [ProducesResponseType(typeof(User[]), 201)] // Created
     [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
     [ProducesResponseType(typeof(void), 401)] // Unauthorized
     //[Authorize]
-    public async Task<IActionResult> Post([FromBody] User user) {
-        if (!ModelState.IsValid) {
-            return BadRequest(ModelState);
+    public async Task<IActionResult> Post([FromBody] UserList userList) {
+        var users = userList.value;
+        foreach (User user in users) {
+            if (!ModelState.IsValid) {
+                return BadRequest(ModelState);
+            }
+            _db.Users.Add(user);
         }
-        _db.Users.Add(user);
         await _db.SaveChangesAsync();
-        return Created("", user);
+        return Created("", users);
+    }
+
+    /// <summary>Bulk edit users</summary>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="deltaUserList">An object containing an array of partial user objects.  Only properties supplied will be updated.</param>
+    [HttpPatch]
+    [ODataRoute("")]
+    [ProducesResponseType(typeof(User[]), 200)] // Ok
+    [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+    [ProducesResponseType(typeof(void), 401)] // Unauthorized
+    [ProducesResponseType(typeof(void), 404)] // Not Found
+    //[Authorize]
+    public async Task<IActionResult> Patch([FromBody] DeltaUserList deltaUserList) {
+        var deltaUsers = deltaUserList.value;
+        User[] dbUsers = new User[0];
+        foreach (Delta<User> userDelta in deltaUsers) {
+            if (!ModelState.IsValid) {
+                return BadRequest(ModelState);
+            }
+            var dbUser = _db.Users.Find(userDelta.GetInstance().Id);
+            if (dbUser == null) {
+                return NotFound();
+            }
+            userDelta.Patch(dbUser);
+            dbUsers.Append(dbUser);
+        }
+        await _db.SaveChangesAsync();
+        return Ok(dbUsers);
     }
 
     /// <summary>Edit the user with the given id</summary>
@@ -101,6 +130,34 @@ public class UsersController : ODataController {
         userDelta.Patch(dbUser);
         await _db.SaveChangesAsync();
         return Ok(dbUser);
+    }
+
+    /// <summary>Replace all data for an array of users</summary>
+    /// <remarks>
+    /// Make sure to secure this action before production release
+    /// </remarks>
+    /// <param name="userList">An object containing an array of full user objects.  Every property will be updated except id.</param>
+    [HttpPut]
+    [ODataRoute("")]
+    [ProducesResponseType(typeof(User), 200)] // Ok
+    [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+    [ProducesResponseType(typeof(void), 401)] // Unauthorized
+    [ProducesResponseType(typeof(void), 404)] // Not Found
+    //[Authorize]
+    public async Task<IActionResult> Put([FromBody] UserList userList) {
+        var users = userList.value;
+        foreach (User user in users) {
+            if (!ModelState.IsValid) {
+                return BadRequest(ModelState);
+            }
+            User dbUser = await _db.Users.FindAsync(user.Id);
+            if (dbUser == null) {
+                return NotFound();
+            }
+            _db.Users.Update(user);
+        }
+        await _db.SaveChangesAsync();
+        return Ok(users);
     }
 
     /// <summary>Replace all data for the user with the given id</summary>
