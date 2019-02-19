@@ -39,10 +39,10 @@ namespace ODataCoreTemplate {
             // To make this demo simpler, we can use a memory only database populated with mock data
             services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
 
-            // For this demo we are using an in-memory database, but later we will connect to an actual database
-            // https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
+            //// For this demo we are using an in-memory database, but later we will connect to an actual database
+            //// https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
             //var connection = @"data source=localhost;initial catalog=ApiDev;integrated security=True;MultipleActiveResultSets=True;ConnectRetryCount=3";
-            //services.AddDbContext<ApiContext>(options => options.UseSqlServer(connection));
+            //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connection, o => o.EnableRetryOnFailure(5, TimeSpan.FromSeconds(3), null)));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options => {
