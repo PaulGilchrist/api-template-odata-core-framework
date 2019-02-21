@@ -6,6 +6,7 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <ApplicationInsightsResourceId>/subscriptions/6fddc491-7042-42fb-9cba-e956e9f79e6e/resourcegroups/ApiDev/providers/microsoft.insights/components/ApiDev3</ApplicationInsightsResourceId>
     <ApplicationInsightsAnnotationResourceId>/subscriptions/6fddc491-7042-42fb-9cba-e956e9f79e6e/resourcegroups/ApiDev/providers/microsoft.insights/components/ApiDev3</ApplicationInsightsAnnotationResourceId>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,7 @@
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.OData" Version="7.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OData.Versioning.ApiExplorer" Version="3.1.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="4.0.1" />
   </ItemGroup>
