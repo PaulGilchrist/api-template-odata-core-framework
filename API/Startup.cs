@@ -103,9 +103,6 @@ namespace ODataCoreTemplate {
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseMvc(routes => {
-                // Swagger will not find controllers using conventional routing.  Attribute routing is required.
-                // Also, OData controller base class opts out of the API Explorer
-                //routes.MapODataServiceRoute("ODataRoute", "odata", GetEdmModel(app.ApplicationServices));
                 routes.MapVersionedODataRoutes("ODataRoute", null, modelBuilder.GetEdmModels());
                 routes.EnableDependencyInjection();
             });
@@ -118,7 +115,6 @@ namespace ODataCoreTemplate {
                         $"/swagger/{description.GroupName}/swagger.json",
                         description.GroupName.ToUpperInvariant());
                 }
-                //options.SwaggerEndpoint("/swagger/v1/swagger.json", "OData Core Template API v1");
                 options.DocExpansion(DocExpansion.None);
             });
         }

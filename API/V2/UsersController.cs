@@ -9,124 +9,130 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ODataCoreTemplate.V1 {
-    [ApiVersion("1.0", Deprecated = true)]
-    [ODataRoutePrefix("addresses")]
-    public class AddressesController : ODataController {
+/*   
+*  Example on how to get an string[] of roles from the user's token 
+*      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
+*/
+
+namespace ODataCoreTemplate.V2 {
+    [ApiVersion("2.0")]
+    [ODataRoutePrefix("users")]
+    public class UsersController : ODataController {
         private OdataCoreTemplate.Models.ApiDbContext _db;
 
-        public AddressesController(OdataCoreTemplate.Models.ApiDbContext context) {
+        public UsersController(OdataCoreTemplate.Models.ApiDbContext context) {
             _db = context;
         }
 
-        /// <summary>Query addresses</summary>
+
+        /// <summary>Query users</summary>
         [HttpGet]
         [ODataRoute("")]
-        [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
+        [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
-        [EnableQuery]
+        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
         public async Task<IActionResult> Get() {
-            var addresses = _db.Addresses;
-            if (!await addresses.AnyAsync()) {
+            var users = _db.Users;
+            if (!await users.AnyAsync()) {
                 return NotFound();
             }
-            return Ok(addresses);
+            return Ok(users);
         }
 
-        /// <summary>Query addresses by id</summary>
-        /// <param name="id">The address id</param>
+        /// <summary>Query users by id</summary>
+        /// <param name="id">The user id</param>
         [HttpGet]
         [ODataRoute("({id})")]
         [ProducesResponseType(typeof(User), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
-        public async Task<IActionResult> GetSingle([FromRoute] int id) {
-            Address address = await _db.Addresses.FindAsync(id);
-            if (address == null) {
+        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All)]
+        public async Task<IActionResult> GetUser([FromRoute] int id) {
+            User user = await _db.Users.FindAsync(id);
+            if (user == null) {
                 return NotFound();
             }
-            return Ok(address);
+            return Ok(user);
         }
 
-        ///// <summary>Create one or more new address</summary>
+        ///// <summary>Create one or more new users</summary>
         ///// <remarks>
         ///// Make sure to secure this action before production release
         ///// </remarks>
-        ///// <param name="addressList">An object containing an array of full address objects</param>
+        ///// <param name="userList">An object containing an array of full user objects</param>
         //[HttpPost]
         //[ODataRoute("")]
-        //[ProducesResponseType(typeof(User), 201)] // Created
+        //[ProducesResponseType(typeof(User[]), 201)] // Created
         //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         ////[Authorize]
-        //public async Task<IActionResult> Post([FromBody] AddressList addressList) {
-        //    var addresses = addressList.value;
-        //    foreach (Address address in addresses) {
-        //        if (!ModelState.IsValid) {
-        //            return BadRequest(ModelState);
-        //        }
-        //        _db.Addresses.Add(address);
-        //    }
-        //    await _db.SaveChangesAsync();
-        //    return Created("", addresses);
+        //public async Task<IActionResult> Post([FromBody] UserList userList) {
+        //    var users = userList.value;
+        //    //foreach (User user in users) {
+        //    //    if (!ModelState.IsValid) {
+        //    //        return BadRequest(ModelState);
+        //    //    }
+        //    //    _db.Users.Add(user);
+        //    //}
+        //    //await _db.SaveChangesAsync();
+        //    return Created("", users);
         //}
 
-        /// <summary>Createa new address</summary>
+        /// <summary>Create a new user</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="address">A full address object</param>
+        /// <param name="user">A full user object</param>
         [HttpPost]
         [ODataRoute("")]
         [ProducesResponseType(typeof(User), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         //[Authorize]
-        public async Task<IActionResult> Post([FromBody] Address address) {
+        public async Task<IActionResult> Post([FromBody] User user) {
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
-            _db.Addresses.Add(address);
+            _db.Users.Add(user);
             await _db.SaveChangesAsync();
-            return Created("", address);
+            return Created("", user);
         }
 
-        ///// <summary>Bulk edit addresses</summary>
+        ///// <summary>Bulk edit users</summary>
         ///// <remarks>
         ///// Make sure to secure this action before production release
         ///// </remarks>
-        ///// <param name="deltaAddressList">An object containing an array of partial address objects.  Only properties supplied will be updated.</param>
+        ///// <param name="deltaUserList">An object containing an array of partial user objects.  Only properties supplied will be updated.</param>
         //[HttpPatch]
         //[ODataRoute("")]
-        //[ProducesResponseType(typeof(User), 200)] // Ok
+        //[ProducesResponseType(typeof(User[]), 200)] // Ok
         //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         //[ProducesResponseType(typeof(void), 404)] // Not Found
         ////[Authorize]
-        //public async Task<IActionResult> Patch([FromBody] DeltaAddressList deltaAddressList) {
-        //    var deltaAddresses = deltaAddressList.value;
-        //    Address[] dbAddresses = new Address[0];
-        //    foreach (Delta<Address> deltaAddress in deltaAddresses) {
+        //public async Task<IActionResult> Patch([FromBody] DeltaUserList deltaUserList) {
+        //    var deltaUsers = deltaUserList.value;
+        //    User[] dbUsers = new User[0];
+        //    foreach (Delta<User> userDelta in deltaUsers) {
         //        if (!ModelState.IsValid) {
         //            return BadRequest(ModelState);
         //        }
-        //        var dbAddress = _db.Addresses.Find(deltaAddress.GetInstance().Id);
-        //        if (dbAddress == null) {
+        //        var dbUser = _db.Users.Find(userDelta.GetInstance().Id);
+        //        if (dbUser == null) {
         //            return NotFound();
         //        }
-        //        deltaAddress.Patch(dbAddress);
-        //        dbAddresses.Append(dbAddress);
+        //        userDelta.Patch(dbUser);
+        //        dbUsers.Append(dbUser);
         //    }
         //    await _db.SaveChangesAsync();
-        //    return Ok(dbAddresses);
+        //    return Ok(dbUsers);
         //}
 
-        /// <summary>Edit the address with the given id</summary>
+        /// <summary>Edit the user with the given id</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="id">The address id</param>
-        /// <param name="addressDelta">A partial address object.  Only properties supplied will be updated.</param>
+        /// <param name="id">The user id</param>
+        /// <param name="userDelta">A partial user object.  Only properties supplied will be updated.</param>
         [HttpPatch]
         [ODataRoute("({id})")]
         [ProducesResponseType(typeof(User), 200)] // Ok
@@ -134,24 +140,24 @@ namespace ODataCoreTemplate.V1 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] Delta<Address> addressDelta) {
+        public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] Delta<User> userDelta) {
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
-            var dbAddress = _db.Addresses.Find(id);
-            if (dbAddress == null) {
+            var dbUser = _db.Users.Find(id);
+            if (dbUser == null) {
                 return NotFound();
             }
-            addressDelta.Patch(dbAddress);
+            userDelta.Patch(dbUser);
             await _db.SaveChangesAsync();
-            return Ok(dbAddress);
+            return Ok(dbUser);
         }
 
-        ///// <summary>Replace all data for an array of addresses</summary>
+        ///// <summary>Replace all data for an array of users</summary>
         ///// <remarks>
         ///// Make sure to secure this action before production release
         ///// </remarks>
-        ///// <param name="addressList">An object containing an array of full address objects.  Every property will be updated except id.</param>
+        ///// <param name="userList">An object containing an array of full user objects.  Every property will be updated except id.</param>
         //[HttpPut]
         //[ODataRoute("")]
         //[ProducesResponseType(typeof(User), 200)] // Ok
@@ -159,28 +165,28 @@ namespace ODataCoreTemplate.V1 {
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         //[ProducesResponseType(typeof(void), 404)] // Not Found
         ////[Authorize]
-        //public async Task<IActionResult> Put([FromBody] AddressList addressList) {
-        //    var addresses = addressList.value;
-        //    foreach (Address address in addresses) {
+        //public async Task<IActionResult> Put([FromBody] UserList userList) {
+        //    var users = userList.value;
+        //    foreach (User user in users) {
         //        if (!ModelState.IsValid) {
         //            return BadRequest(ModelState);
         //        }
-        //        Address dbAddress = await _db.Addresses.FindAsync(address.Id);
-        //        if (dbAddress == null) {
+        //        User dbUser = await _db.Users.FindAsync(user.Id);
+        //        if (dbUser == null) {
         //            return NotFound();
         //        }
-        //        _db.Addresses.Update(address);
+        //        _db.Users.Update(user);
         //    }
         //    await _db.SaveChangesAsync();
-        //    return Ok(addresses);
+        //    return Ok(users);
         //}
 
-        /// <summary>Replace all data for the address with the given id</summary>
+        /// <summary>Replace all data for the user with the given id</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="id">The address id</param>
-        /// <param name="address">A full address object.  Every property will be updated except id.</param>
+        /// <param name="id">The user id</param>
+        /// <param name="user">A full user object.  Every property will be updated except id.</param>
         [HttpPut]
         [ODataRoute("({id})")]
         [ProducesResponseType(typeof(User), 200)] // Ok
@@ -188,24 +194,24 @@ namespace ODataCoreTemplate.V1 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] Address address) {
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] User user) {
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
-            Address dbAddress = await _db.Addresses.FindAsync(id);
-            if (dbAddress == null) {
+            User dbUser = await _db.Users.FindAsync(id);
+            if (dbUser == null) {
                 return NotFound();
             }
-            _db.Addresses.Update(address);
+            _db.Users.Update(user);
             await _db.SaveChangesAsync();
-            return Ok(address);
+            return Ok(user);
         }
 
-        /// <summary>Delete the given address</summary>
+        /// <summary>Delete the given user</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="id">The address id</param>
+        /// <param name="id">The user id</param>
         [HttpDelete]
         [ODataRoute("({id})")]
         [ProducesResponseType(typeof(void), 204)] // No Content
@@ -213,80 +219,80 @@ namespace ODataCoreTemplate.V1 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> Delete([FromRoute] int id) {
-            Address address = await _db.Addresses.FindAsync(id);
-            if (address == null) {
+            User user = await _db.Users.FindAsync(id);
+            if (user == null) {
                 return NotFound();
             }
-            _db.Addresses.Remove(address);
+            _db.Users.Remove(user);
             await _db.SaveChangesAsync();
             return NoContent();
         }
 
-        /// <summary>Get the users for the address with the given id</summary>
-        /// <param name="id">The address id</param>
+
+        /// <summary>Get the addresses for the user with the given id</summary>
+        /// <param name="id">The user id</param>
         [HttpGet]
-        [ODataRoute("({id})/users")]
-        [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
+        [ODataRoute("({id})/addresses")]
+        [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery]
-        public IQueryable<User> GetUsers([FromRoute] int id) {
-            return _db.Addresses.Where(m => m.Id == id).SelectMany(m => m.Users);
+        public IQueryable<Address> GetAddresses([FromRoute] int id) {
+            return _db.Users.Where(m => m.Id == id).SelectMany(m => m.Addresses);
         }
 
-
-        /// <summary>Associate a user to the address with the given id</summary>
+        /// <summary>Associate an addresses to the user with the given id</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
         /// <param name="id">The user id</param>
-        /// <param name="userId">The user id to associate with the address</param>
+        /// <param name="addressId">The address id to associate with the user</param>
         [HttpPost]
-        [ODataRoute("({id})/users({userId})")]
+        [ODataRoute("({id})/addresses({addressId})")]
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> LinkAddresses([FromRoute] int id, [FromRoute] int userId) {
-            Address address = await _db.Addresses.FindAsync(id);
-            if (address == null) {
-                return NotFound();
-            }
-            if (address.Users.Any(i => i.Id == userId)) {
-                return BadRequest(string.Format("The address with id {0} is already linked to the user with id {1}", id, userId));
-            }
-            User user = await _db.Users.FindAsync(userId);
+        public async Task<IActionResult> LinkAddresses([FromRoute] int id, [FromRoute] int addressId) {
+            User user = await _db.Users.FindAsync(id);
             if (user == null) {
                 return NotFound();
             }
-            address.Users.Add(user);
+            if (user.Addresses.Any(i => i.Id == addressId)) {
+                return BadRequest(string.Format("The user with id {0} is already linked to the address with id {1}", id, addressId));
+            }
+            Address address = await _db.Addresses.FindAsync(addressId);
+            if (address == null) {
+                return NotFound();
+            }
+            user.Addresses.Add(address);
             await _db.SaveChangesAsync();
             return NoContent();
         }
 
 
-        /// <summary>Remove an user association from the address with the given id</summary>
+        /// <summary>Remove an address association from the user with the given id</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="id">The address id</param>
-        /// <param name="userId">The user id to remove association from the address</param>
+        /// <param name="id">The user id</param>
+        /// <param name="addressId">The address id to remove association from the user</param>
         [HttpDelete]
-        [ODataRoute("({id})/users({userId})")]
+        [ODataRoute("({id})/addresses({addressId})")]
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         // [Authorize]
-        public async Task<IActionResult> UnlinkAddresses([FromRoute] int id, [FromRoute] int userId) {
-            Address address = await _db.Addresses.FindAsync(id);
-            if (address == null) {
-                return NotFound();
-            }
-            User user = await _db.Users.FindAsync(userId);
+        public async Task<IActionResult> UnlinkAddresses([FromRoute] int id, [FromRoute] int addressId) {
+            User user = await _db.Users.FindAsync(id);
             if (user == null) {
                 return NotFound();
             }
-            address.Users.Remove(user);
+            Address address = await _db.Addresses.FindAsync(addressId);
+            if (address == null) {
+                return NotFound();
+            }
+            user.Addresses.Remove(address);
             await _db.SaveChangesAsync();
             return NoContent();
         }

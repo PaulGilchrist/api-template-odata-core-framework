@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ODataCoreTemplate.V1 {
-    [ApiVersion("1.0", Deprecated = true)]
+namespace ODataCoreTemplate.V2 {
+    [ApiVersion("2.0")]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {
         private OdataCoreTemplate.Models.ApiDbContext _db;
