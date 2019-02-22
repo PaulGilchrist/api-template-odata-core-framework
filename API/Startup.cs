@@ -54,7 +54,10 @@ namespace ODataCoreTemplate {
                     options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
-            services.AddApiVersioning(options => options.ReportApiVersions = true);
+            services.AddApiVersioning(options => {
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+            });
             services.AddOData().EnableApiVersioning();
             services.AddODataApiExplorer(
                 options => {

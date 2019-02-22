@@ -16,7 +16,7 @@
         /// <param name="apiVersion">The <see cref="ApiVersion">API version</see> associated with the <paramref name="builder"/>.</param>
         public void Apply(ODataModelBuilder builder, ApiVersion apiVersion) {
             // Called once for each apiVersion, so this is the best place to define the EntiitySet differences from version to version
-            builder.EntitySet<User>("user")
+            builder.EntitySet<User>("users")
                 .EntityType
                 .HasKey(o => o.Id)
                 .Filter()
@@ -27,17 +27,7 @@
                 .Select()
                 .HasMany(u => u.Addresses)
                 .Expand();
-
-            builder.EntitySet<List<User>>("users")
-                .EntityType
-                //.HasKey(o => o.Id)
-                .Filter()
-                .Count()
-                .Expand()
-                .OrderBy()
-                .Page()
-                .Select()
-                .Expand();
+ 
             //if (apiVersion < ApiVersions.V2) {
             //    user.Ignore(o => o.MiddleName);
             //}
