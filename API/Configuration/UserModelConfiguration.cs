@@ -19,23 +19,19 @@
             builder.EntitySet<User>("users")
                 .EntityType
                 .HasKey(o => o.Id)
+                .HasMany(u => u.Addresses)
                 .Filter()
                 .Count()
                 .Expand()
                 .OrderBy()
                 .Page()
                 .Select()
-                .HasMany(u => u.Addresses)
                 .Expand();
- 
-            //if (apiVersion < ApiVersions.V2) {
+            builder.Function("users").Returns<IEnumerable<User>>().Parameter<UserList>("userList"); // Only works for POST
+            //Eample of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
+            //     Adding a property would not be considered a breaking change and not warrant a new ApiVersion
+            //if (apiVersion > ApiVersions.V1) {
             //    user.Ignore(o => o.MiddleName);
-            //}
-            //if (apiVersion >= ApiVersions.V1) {
-            //    user.Collection.Function("MostExpensive").ReturnsFromEntitySet<User>("users");
-            //}
-            //if (apiVersion >= ApiVersions.V2) {
-            //    user.Action("Rate").Parameter<int>("rating");
             //}
         }
     }

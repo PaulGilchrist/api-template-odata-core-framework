@@ -15,24 +15,21 @@
         public void Apply(ODataModelBuilder builder, ApiVersion apiVersion) {
             builder.EntitySet<Address>("addresses")
                 .EntityType
+                .HasKey(o => o.Id)
+                .HasMany(a => a.Users)
                 .Filter()
                 .Count()
                 .Expand()
                 .OrderBy()
                 .Page()
                 .Select()
-                //.HasKey(o => o.Id)
-                .HasMany(a => a.Users)
                 .Expand();
-            //if (apiVersion < ApiVersions.V2) {
-            //    address.Ignore(o => o.Street2);
-            //}
-            //if (apiVersion >= ApiVersions.V1) {
-            //    address.Collection.Function("MostExpensive").ReturnsFromEntitySet<Address>("addresses");
-            //}
-            //if (apiVersion >= ApiVersions.V2) {
-            //    address.Action("Rate").Parameter<int>("rating");
-            //}
+            // Eample of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
+            //     Adding a property would not be considered a breaking change and not warrant a new ApiVersion
+            // if (apiVersion > ApiVersions.V1) {
+            //     user.Ignore(o => o.Street2);
+            // }
+
         }
     }
 }

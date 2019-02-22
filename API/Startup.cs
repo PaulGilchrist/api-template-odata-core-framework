@@ -67,11 +67,6 @@ namespace ODataCoreTemplate {
                     // note: this option is only necessary when versioning by url segment. the SubstitutionFormat
                     // can also be used to control the format of the API version in route templates
                     options.SubstituteApiVersionInUrl = true;
-                    // configure query options (which cannot otherwise be configured by OData conventions)
-                    //options.QueryOptions.Controller<UsersController>()
-                    //    .Action(c => c.Get()).Allow(AllowedQueryOptions.All);
-                    //options.QueryOptions.Controller<AddressesController>()
-                    //    .Action(c => c.Get()).Allow(AllowedQueryOptions.All);
                 });
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddHttpContextAccessor();

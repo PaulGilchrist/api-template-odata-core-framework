@@ -54,6 +54,32 @@ namespace ODataCoreTemplate.V2 {
             return Ok(user);
         }
 
+        /// <summary>Create one or more new users</summary>
+        /// <remarks>
+        /// Make sure to secure this action before production release
+        /// </remarks>
+        /// <param name="userList">An object containing an array of full user objects</param>
+        [HttpPost]
+        [ODataRoute("users")]
+        [ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
+        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        //[Authorize]
+        public async Task<IActionResult> Post([FromBody] UserList userList) {
+            // Works for both OData and Swagger, but only for POST (not PUT or PATCH)
+            //     Requires adding the following OData function
+            //     builder.Function("users").Returns<IEnumerable<User>>().Parameter<UserList>("userList");
+            var users = userList.value;
+            foreach (User user in users) {
+                if (!ModelState.IsValid) {
+                    return BadRequest(ModelState);
+                }
+                _db.Users.Add(user);
+            }
+            await _db.SaveChangesAsync();
+            return Created("", users);
+        }
+
         ///// <summary>Create one or more new users</summary>
         ///// <remarks>
         ///// Make sure to secure this action before production release
@@ -61,7 +87,7 @@ namespace ODataCoreTemplate.V2 {
         ///// <param name="userList">An object containing an array of full user objects</param>
         //[HttpPost]
         //[ODataRoute("users")]
-        //[ProducesResponseType(typeof(User[]), 201)] // Created
+        //[ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
         //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         ////[Authorize]
@@ -85,11 +111,11 @@ namespace ODataCoreTemplate.V2 {
         ///// <param name="users">An array of full user objects</param>
         //[HttpPost]
         //[ODataRoute("users")]
-        //[ProducesResponseType(typeof(List<User>), 201)] // Created
+        //[ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
         //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         ////[Authorize]
-        //public async Task<IActionResult> Post([FromBody] List<User> users) {
+        //public async Task<IActionResult> Post([FromBody] IEnumerable<User> users) {
         //    //Proper Swagger but passes in null as JSON can not convert to array to single User object
         //    foreach (User user in users) {
         //        if (!ModelState.IsValid) {
@@ -101,29 +127,29 @@ namespace ODataCoreTemplate.V2 {
         //    return Created("", users);
         //}
 
-        /// <summary>Create one or more new users</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
-        /// <param name="users">An array of full user objects</param>
-        [HttpPost]
-        [ODataRoute("users")]
-        [ProducesResponseType(typeof(List<User>), 201)] // Created
-        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[Authorize]
-        public async Task<IActionResult> Post([FromBody] JArray users) {
-            // Works but Swagger does not know the object type
-            var userList = users.ToObject<List<User>>();
-            foreach (User user in userList) {
-                if (!ModelState.IsValid) {
-                    return BadRequest(ModelState);
-                }
-                _db.Users.Add(user);
-            }
-            await _db.SaveChangesAsync();
-            return Created("", userList);
-        }
+        ///// <summary>Create one or more new users</summary>
+        ///// <remarks>
+        ///// Make sure to secure this action before production release
+        ///// </remarks>
+        ///// <param name="users">An array of full user objects</param>
+        //[HttpPost]
+        //[ODataRoute("users")]
+        //[ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
+        //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
+        ////[Authorize]
+        //public async Task<IActionResult> Post([FromBody] JArray users) {
+        //    // Works but Swagger does not know the object type
+        //    var userList = users.ToObject<List<User>>();
+        //    foreach (User user in userList) {
+        //        if (!ModelState.IsValid) {
+        //            return BadRequest(ModelState);
+        //        }
+        //        _db.Users.Add(user);
+        //    }
+        //    await _db.SaveChangesAsync();
+        //    return Created("", userList);
+        //}
 
         ///// <summary>Bulk edit users</summary>
         ///// <remarks>
@@ -132,7 +158,7 @@ namespace ODataCoreTemplate.V2 {
         ///// <param name="deltaUserList">An object containing an array of partial user objects.  Only properties supplied will be updated.</param>
         //[HttpPatch]
         //[ODataRoute("users")]
-        //[ProducesResponseType(typeof(User[]), 200)] // Ok
+        //[ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         //[ProducesResponseType(typeof(void), 404)] // Not Found
@@ -162,7 +188,7 @@ namespace ODataCoreTemplate.V2 {
         ///// <param name="userList">An object containing an array of full user objects.  Every property will be updated except id.</param>
         //[HttpPut]
         //[ODataRoute("users")]
-        //[ProducesResponseType(typeof(User), 200)] // Ok
+        //[ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         //[ProducesResponseType(typeof(void), 401)] // Unauthorized
         //[ProducesResponseType(typeof(void), 404)] // Not Found
@@ -183,26 +209,26 @@ namespace ODataCoreTemplate.V2 {
         //    return Ok(users);
         //}
 
-        ///// <summary>Delete the given user</summary>
-        ///// <remarks>
-        ///// Make sure to secure this action before production release
-        ///// </remarks>
-        ///// <param name="id">The user id</param>
-        //[HttpDelete]
-        //[ODataRoute("users({id})")]
-        //[ProducesResponseType(typeof(void), 204)] // No Content
-        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[ProducesResponseType(typeof(void), 404)] // Not Found
-        ////[Authorize]
-        //public async Task<IActionResult> Delete([FromRoute] int id) {
-        //    User user = await _db.Users.FindAsync(id);
-        //    if (user == null) {
-        //        return NotFound();
-        //    }
-        //    _db.Users.Remove(user);
-        //    await _db.SaveChangesAsync();
-        //    return NoContent();
-        //}
+        /// <summary>Delete the given user</summary>
+        /// <remarks>
+        /// Make sure to secure this action before production release
+        /// </remarks>
+        /// <param name="id">The user id</param>
+        [HttpDelete]
+        [ODataRoute("users({id})")]
+        [ProducesResponseType(typeof(void), 204)] // No Content
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 404)] // Not Found
+        //[Authorize]
+        public async Task<IActionResult> Delete([FromRoute] int id) {
+            User user = await _db.Users.FindAsync(id);
+            if (user == null) {
+                return NotFound();
+            }
+            _db.Users.Remove(user);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
 
         ///// <summary>Get the addresses for the user with the given id</summary>
         ///// <param name="id">The user id</param>
