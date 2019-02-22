@@ -16,4 +16,5 @@ You can find steps on how to recreate this project from scratch at [GitHub Docum
 * Allowing for nested routes
 * Showing nested/related objects
 * Ability to Get single object by id without need for $filter query
+* Versioning (V1 has single object POST, PATCH, & PUT, V2 has bulk POST, PATCH, & PUT)
 

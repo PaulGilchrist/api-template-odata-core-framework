@@ -24,15 +24,12 @@
                 //.HasKey(o => o.Id)
                 .HasMany(a => a.Users)
                 .Expand();
-
             //if (apiVersion < ApiVersions.V2) {
             //    address.Ignore(o => o.Street2);
             //}
-
             //if (apiVersion >= ApiVersions.V1) {
             //    address.Collection.Function("MostExpensive").ReturnsFromEntitySet<Address>("addresses");
             //}
-
             //if (apiVersion >= ApiVersions.V2) {
             //    address.Action("Rate").Parameter<int>("rating");
             //}

@@ -103,7 +103,7 @@ namespace ODataCoreTemplate {
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseMvc(routes => {
-                routes.MapVersionedODataRoutes("ODataRoute", null, modelBuilder.GetEdmModels());
+                routes.MapVersionedODataRoutes("ODataRoute", "odata", modelBuilder.GetEdmModels());
                 routes.EnableDependencyInjection();
             });
             // Enable middleware to serve generated Swagger as a JSON endpoint.

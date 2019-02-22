@@ -10,6 +10,7 @@ namespace ODataCoreTemplate.Models {
 
     public class UserList {
         public List<User> value { get; set; }
+
     }
 
     public class User {
