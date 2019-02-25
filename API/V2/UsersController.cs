@@ -174,6 +174,7 @@ namespace ODataCoreTemplate.V2 {
         //        if (dbUser == null) {
         //            return NotFound();
         //        }
+        //        _db.Entry(dbUser).State = EntityState.Detached;
         //        userDelta.Patch(dbUser);
         //        dbUsers.Append(dbUser);
         //    }
@@ -194,6 +195,7 @@ namespace ODataCoreTemplate.V2 {
         //[ProducesResponseType(typeof(void), 404)] // Not Found
         ////[Authorize]
         //public async Task<IActionResult> Put([FromBody] UserList userList) {
+        //    // OData works, but Swagger does not
         //    var users = userList.value;
         //    foreach (User user in users) {
         //        if (!ModelState.IsValid) {
@@ -203,6 +205,7 @@ namespace ODataCoreTemplate.V2 {
         //        if (dbUser == null) {
         //            return NotFound();
         //        }
+        //        _db.Entry(dbUser).State = EntityState.Detached;
         //        _db.Users.Update(user);
         //    }
         //    await _db.SaveChangesAsync();

@@ -27,7 +27,7 @@
                 .Page()
                 .Select()
                 .Expand();
-            builder.Function("users").Returns<IEnumerable<User>>().Parameter<UserList>("userList"); // Only works for POST
+            //builder.Function("users").Returns<IEnumerable<User>>().Parameter<UserList>("userList"); // Only works for POST
             //Eample of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
             //     Adding a property would not be considered a breaking change and not warrant a new ApiVersion
             //if (apiVersion > ApiVersions.V1) {

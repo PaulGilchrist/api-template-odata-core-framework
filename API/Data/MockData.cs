@@ -1,4 +1,5 @@
-﻿using OdataCoreTemplate.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using OdataCoreTemplate.Models;
 using ODataCoreTemplate.Models;
 using System;
 using System.Collections.Generic;

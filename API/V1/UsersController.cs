@@ -96,6 +96,7 @@ namespace ODataCoreTemplate.V1 {
             if (dbUser == null) {
                 return NotFound();
             }
+            _db.Entry(dbUser).State = EntityState.Detached;
             userDelta.Patch(dbUser);
             await _db.SaveChangesAsync();
             return Ok(dbUser);
@@ -122,6 +123,7 @@ namespace ODataCoreTemplate.V1 {
             if (dbUser == null) {
                 return NotFound();
             }
+            _db.Entry(dbUser).State = EntityState.Detached;
             _db.Users.Update(user);
             await _db.SaveChangesAsync();
             return Ok(user);
