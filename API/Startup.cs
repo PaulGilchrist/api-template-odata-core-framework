@@ -101,6 +101,7 @@ namespace ODataCoreTemplate {
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseMvc(routes => {
+                routes.Count().Filter().OrderBy().Expand().Select().MaxTop(null);
                 routes.MapVersionedODataRoutes("ODataRoute", "odata", modelBuilder.GetEdmModels());
                 routes.EnableDependencyInjection();
             });
