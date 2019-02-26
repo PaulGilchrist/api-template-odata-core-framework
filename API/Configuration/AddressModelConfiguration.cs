@@ -13,9 +13,8 @@
         /// <param name="builder">The <see cref="ODataModelBuilder">builder</see> used to apply configurations.</param>
         /// <param name="apiVersion">The <see cref="ApiVersion">API version</see> associated with the <paramref name="builder"/>.</param>
         public void Apply(ODataModelBuilder builder, ApiVersion apiVersion) {
-            builder.EntitySet<Address>("addresses")
-                .EntityType
-                .HasKey(o => o.Id)
+            var address = builder.EntitySet<Address>("addresses").EntityType;
+            address.HasKey(o => o.Id)
                 .HasMany(a => a.Users)
                 .Filter()
                 .Count()
@@ -26,9 +25,9 @@
                 .Expand();
             // Eample of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
             //     Adding a property would not be considered a breaking change and not warrant a new ApiVersion
-            // if (apiVersion > ApiVersions.V1) {
-            //     user.Ignore(o => o.Street2);
-            // }
+            if (apiVersion > ApiVersions.V2) {
+                address.Ignore(o => o.StreetName2);
+            }
 
         }
     }

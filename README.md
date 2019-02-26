@@ -18,3 +18,7 @@ You can find steps on how to recreate this project from scratch at [GitHub Docum
 * Ability to Get single object by id without need for $filter query
 * Versioning (V1 has single object POST, PATCH, & PUT, V2 has bulk POST, PATCH, & PUT)
 
+### Notes
+For this demo, to show how versioning can handle breaking changes, the V1 version of users has middleName, and the V1 version of addresses has streetName2, with both of them being ignored in version 2.  Both properties exist in the Entity Framework context, but are ignored by OData so a single database can support both entity models.
+
+Also, net new capability is added in V2 to allow net new endpoints for associating users to addresses or addresses to users, showing how Swagger allows showing both versions and their differences.

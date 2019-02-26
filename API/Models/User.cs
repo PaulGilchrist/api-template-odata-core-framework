@@ -10,7 +10,6 @@ namespace ODataCoreTemplate.Models {
 
     public class UserList {
         public List<User> value { get; set; }
-
     }
 
     public class User {
@@ -21,6 +20,10 @@ namespace ODataCoreTemplate.Models {
         [Required]
         [StringLength(50)]
         public string FirstName { get; set; }
+
+        [Display(Name = "Middle Name")]
+        [StringLength(50)]
+        public string MiddleName { get; set; }
 
         [Display(Name = "Last Name")]
         [Required]

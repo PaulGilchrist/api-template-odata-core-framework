@@ -25,6 +25,9 @@ namespace ODataCoreTemplate.Models {
         [StringLength(100)]
         public string StreetName { get; set; }
 
+        [Display(Name = "Street Name Line 2")]
+        [StringLength(100)]
+        public string StreetName2 { get; set; }
         [Required]
         [StringLength(50)]
         public string City { get; set; }

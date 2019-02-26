@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using OdataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -74,6 +75,7 @@ namespace ODataCoreTemplate {
             services.AddSwaggerGen(options => {
                 // add a custom operation filter which sets default values
                 options.OperationFilter<SwaggerDefaultValues>();
+                options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
                 // integrate xml comments
                 options.IncludeXmlComments(XmlCommentsFilePath);
             });
