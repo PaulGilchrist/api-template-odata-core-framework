@@ -71,35 +71,35 @@ namespace ODataCoreTemplate.V2 {
             return Created("", addresses);
         }
 
-        /// <summary>Bulk edit addresses</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
-        /// <param name="deltaAddressList">An object containing an array of partial address objects.  Only properties supplied will be updated.</param>
-        [HttpPatch]
-        [ODataRoute("")]
-        [ProducesResponseType(typeof(User), 200)] // Ok
-        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
-        public async Task<IActionResult> Patch([FromBody] DeltaAddressList deltaAddressList) {
-            var deltaAddresses = deltaAddressList.value;
-            Address[] dbAddresses = new Address[0];
-            foreach (Delta<Address> deltaAddress in deltaAddresses) {
-                if (!ModelState.IsValid) {
-                    return BadRequest(ModelState);
-                }
-                var dbAddress = _db.Addresses.Find(deltaAddress.GetInstance().Id);
-                if (dbAddress == null) {
-                    return NotFound();
-                }
-                deltaAddress.Patch(dbAddress);
-                dbAddresses.Append(dbAddress);
-            }
-            await _db.SaveChangesAsync();
-            return Ok(dbAddresses);
-        }
+        ///// <summary>Bulk edit addresses</summary>
+        ///// <remarks>
+        ///// Make sure to secure this action before production release
+        ///// </remarks>
+        ///// <param name="deltaAddressList">An object containing an array of partial address objects.  Only properties supplied will be updated.</param>
+        //[HttpPatch]
+        //[ODataRoute("")]
+        //[ProducesResponseType(typeof(User), 200)] // Ok
+        //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
+        //[ProducesResponseType(typeof(void), 404)] // Not Found
+        ////[Authorize]
+        //public async Task<IActionResult> Patch([FromBody] DeltaAddressList deltaAddressList) {
+        //    var deltaAddresses = deltaAddressList.value;
+        //    Address[] dbAddresses = new Address[0];
+        //    foreach (Delta<Address> deltaAddress in deltaAddresses) {
+        //        if (!ModelState.IsValid) {
+        //            return BadRequest(ModelState);
+        //        }
+        //        var dbAddress = _db.Addresses.Find(deltaAddress.GetInstance().Id);
+        //        if (dbAddress == null) {
+        //            return NotFound();
+        //        }
+        //        deltaAddress.Patch(dbAddress);
+        //        dbAddresses.Append(dbAddress);
+        //    }
+        //    await _db.SaveChangesAsync();
+        //    return Ok(dbAddresses);
+        //}
 
         /// <summary>Replace all data for an array of addresses</summary>
         /// <remarks>

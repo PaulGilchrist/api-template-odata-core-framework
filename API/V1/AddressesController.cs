@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using ODataCoreTemplate.Models;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ODataCoreTemplate.V1 {
@@ -68,12 +67,12 @@ namespace ODataCoreTemplate.V1 {
             return Created("", address);
         }
 
-        /// <summary>Edit the address with the given id</summary>
+        /// <summary>Bulk edit addresses</summary>
         /// <remarks>
+        /// Does not support updating a property to null.  Use HTTP action PUT if this is a requirement
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="id">The address id</param>
-        /// <param name="addressDelta">A partial address object.  Only properties supplied will be updated.</param>
+        /// <param name="patchAddressList">An object containing an array of partial address objects.  Only properties supplied and not null, will be updated.</param>
         [HttpPatch]
         [ODataRoute("({id})")]
         [ProducesResponseType(typeof(User), 200)] // Ok
@@ -81,17 +80,32 @@ namespace ODataCoreTemplate.V1 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] Delta<Address> addressDelta) {
+        public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] PatchAddressList patchAddressList) {
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
-            var dbAddress = _db.Addresses.Find(id);
-            if (dbAddress == null) {
-                return NotFound();
+            //var patchAddresses = patchAddressList.value;
+            List<Address> dbAddresses = new List<Address>(0);
+            System.Reflection.PropertyInfo[] properties = typeof(PatchAddress).GetProperties();
+            foreach (PatchAddress patchAddress in patchAddressList.value) {
+                var dbAddress = _db.Addresses.Find(patchAddress.Id);
+                if (dbAddress == null) {
+                    return NotFound();
+                }
+                // Update any properties that have changed (and are not null)
+                foreach (var property in properties) {
+                    var propertyValue = patchAddress.GetType().GetProperty(property.Name).GetValue(patchAddress, null);
+                    // Only set values that are not null or zero
+                    if (propertyValue != null) {
+                        dbAddress.GetType().GetProperty(property.Name).SetValue(dbAddress, propertyValue);
+                    }
+                }
+                _db.Entry(dbAddress).State = EntityState.Detached;
+                _db.Addresses.Update(dbAddress);
+                dbAddresses.Add(dbAddress);
             }
-            addressDelta.Patch(dbAddress);
             await _db.SaveChangesAsync();
-            return Ok(dbAddress);
+            return Ok(dbAddresses);
         }
 
         /// <summary>Replace all data for the address with the given id</summary>
