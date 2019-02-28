@@ -5,10 +5,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ODataCoreTemplate.Models {
 
-    public class PatchUserList {
-        public List<PatchUser> value { get; set; }
-    }
-
     public class UserList {
         public List<User> value { get; set; }
     }
@@ -34,23 +30,5 @@ namespace ODataCoreTemplate.Models {
         public List<Address> Addresses { get; set; } = new List<Address>();
     }
 
-    public class PatchUser {
-        // If any of these are not nullable, then make them optional (ex: int?)
-        [Key]
-        public int Id { get; set; }
-        [Display(Name = "First Name")]
-        [StringLength(50)]
-        public string FirstName { get; set; }
-        [Display(Name = "Middle Name")]
-        [StringLength(50)]
-        public string MiddleName { get; set; }
-        [Display(Name = "Last Name")]
-        [StringLength(50)]
-        public string LastName { get; set; }
-        [StringLength(150)]
-        public string Email { get; set; }
-        [StringLength(20)]
-        public string Phone { get; set; }
-    }
 
 }

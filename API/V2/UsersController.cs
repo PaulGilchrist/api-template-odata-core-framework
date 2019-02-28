@@ -104,22 +104,18 @@ namespace ODataCoreTemplate.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> Patch([FromBody] DynamicList userList) {
-            // This option works, but does not show the model in Swagger
             var patchUsers = userList.value;
             List<User> dbUsers = new List<User>(0);
             System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
             foreach (JObject patchUser in patchUsers) {
-                // Id is required
                 var dbUser = _db.Users.Find((int)patchUser["id"]);
                 if (dbUser == null) {
                     return NotFound();
                 }
                 var patchUseProperties = patchUser.Properties();
-                // Update only those properties passed in
                 foreach (var patchUserProperty in patchUseProperties) {
                     foreach (var userProperty in userProperties) {
                         if(String.Compare(patchUserProperty.Name, userProperty.Name, true)==0) {
-                            // Update dbUser with new value
                             _db.Entry(dbUser).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
                         }
                     }
@@ -131,48 +127,6 @@ namespace ODataCoreTemplate.V2 {
             await _db.SaveChangesAsync();
             return Ok(dbUsers);
         }
-
-        ///// <summary>Bulk edit users</summary>
-        ///// <remarks>
-        ///// Does not support updating a property to null.  Use HTTP action PUT if this is a requirement
-        ///// Make sure to secure this action before production release
-        ///// </remarks>
-        ///// <param name="patchUserList">An object containing an array of partial user objects.  Only properties supplied and not null, will be updated.</param>
-        //[HttpPatch]
-        //[ODataRoute("")]
-        //[ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
-        //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[ProducesResponseType(typeof(void), 404)] // Not Found
-        ////[Authorize]
-        //public async Task<IActionResult> Patch([FromBody] PatchUserList patchUserList) {
-        //    // This option works, but does not support chaninging a properies value to null and also requires specifically defining a patchClass where all properties except the key are nullable
-        //    if (!ModelState.IsValid) {
-        //        return BadRequest(ModelState);
-        //    }
-        //    var patchUsers = patchUserList.value;
-        //    List<User> dbUsers = new List<User>(0);
-        //    System.Reflection.PropertyInfo[] properties = typeof(PatchUser).GetProperties();
-        //    foreach (PatchUser patchUser in patchUsers) {
-        //        var dbUser = _db.Users.Find(patchUser.Id);
-        //        if (dbUser == null) {
-        //            return NotFound();
-        //        }
-        //        // Update any properties that have changed (and are not null)
-        //        foreach (var property in properties) {
-        //            var propertyValue = patchUser.GetType().GetProperty(property.Name).GetValue(patchUser, null);
-        //            // Only set values that are not null or zero
-        //            if (propertyValue != null) {
-        //                dbUser.GetType().GetProperty(property.Name).SetValue(dbUser, propertyValue);
-        //            }
-        //        }
-        //        _db.Entry(dbUser).State = EntityState.Detached;
-        //        _db.Users.Update(dbUser);
-        //        dbUsers.Add(dbUser);
-        //    }
-        //    await _db.SaveChangesAsync();
-        //    return Ok(dbUsers);
-        //}
 
         ///// <summary>Bulk edit users</summary>
         ///// <remarks>

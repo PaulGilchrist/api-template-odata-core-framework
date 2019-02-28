@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNet.OData;
+﻿using API.Models;
+using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using ODataCoreTemplate.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -71,35 +74,44 @@ namespace ODataCoreTemplate.V2 {
             return Created("", addresses);
         }
 
-        ///// <summary>Bulk edit addresses</summary>
-        ///// <remarks>
-        ///// Make sure to secure this action before production release
-        ///// </remarks>
-        ///// <param name="deltaAddressList">An object containing an array of partial address objects.  Only properties supplied will be updated.</param>
-        //[HttpPatch]
-        //[ODataRoute("")]
-        //[ProducesResponseType(typeof(User), 200)] // Ok
-        //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[ProducesResponseType(typeof(void), 404)] // Not Found
-        ////[Authorize]
-        //public async Task<IActionResult> Patch([FromBody] DeltaAddressList deltaAddressList) {
-        //    var deltaAddresses = deltaAddressList.value;
-        //    Address[] dbAddresses = new Address[0];
-        //    foreach (Delta<Address> deltaAddress in deltaAddresses) {
-        //        if (!ModelState.IsValid) {
-        //            return BadRequest(ModelState);
-        //        }
-        //        var dbAddress = _db.Addresses.Find(deltaAddress.GetInstance().Id);
-        //        if (dbAddress == null) {
-        //            return NotFound();
-        //        }
-        //        deltaAddress.Patch(dbAddress);
-        //        dbAddresses.Append(dbAddress);
-        //    }
-        //    await _db.SaveChangesAsync();
-        //    return Ok(dbAddresses);
-        //}
+        /// <summary>Bulk edit addresses</summary>
+        /// <remarks>
+        /// Make sure to secure this action before production release
+        /// </remarks>
+        /// <param name="addressList">An object containing an array of partial address objects.
+        /// See GET action for object model.  Since PATCH only requires the id property and those properties being modified, it does not have its own model
+        /// </param>
+        [HttpPatch]
+        [ODataRoute("")]
+        [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
+        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 404)] // Not Found
+        //[Authorize]
+        public async Task<IActionResult> Patch([FromBody] DynamicList addressList) {
+            var patchAddresses = addressList.value;
+            List<Address> dbAddresses = new List<Address>(0);
+            System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
+            foreach (JObject patchAddress in patchAddresses) {
+                var dbAddress = _db.Addresses.Find((int)patchAddress["id"]);
+                if (dbAddress == null) {
+                    return NotFound();
+                }
+                var patchAddressProperties = patchAddress.Properties();
+                foreach (var patchAddressProperty in patchAddressProperties) {
+                    foreach (var addressProperty in addressProperties) {
+                        if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
+                            _db.Entry(dbAddress).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
+                        }
+                    }
+                }
+                _db.Entry(dbAddress).State = EntityState.Detached;
+                _db.Addresses.Update(dbAddress);
+                dbAddresses.Add(dbAddress);
+            }
+            await _db.SaveChangesAsync();
+            return Ok(dbAddresses);
+        }
 
         /// <summary>Replace all data for an array of addresses</summary>
         /// <remarks>
