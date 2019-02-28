@@ -96,7 +96,6 @@ namespace ODataCoreTemplate.V2 {
         /// <param name="userList">An object containing an array of partial user objects.
         /// See GET action for object model.  Since PATCH only requires the id property and those properties being modified, it does not have its own model
         /// </param>
-        /// <param name="users">An object containing an array of partial user objects.</param>
         [HttpPatch]
         [ODataRoute("")]
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
@@ -104,7 +103,7 @@ namespace ODataCoreTemplate.V2 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> Patch([FromBody] DynamicList userList, [ModelBinder] UserList users=null) {
+        public async Task<IActionResult> Patch([FromBody] DynamicList userList) {
             var patchUsers = userList.value;
             List<User> dbUsers = new List<User>(0);
             System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
