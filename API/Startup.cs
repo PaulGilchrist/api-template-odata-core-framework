@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using OdataCoreTemplate.Data;
 using OdataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
@@ -23,8 +24,7 @@ using System.IO;
 using System.Reflection;
 
 namespace ODataCoreTemplate {
-    public class Startup
-    {
+    public class Startup {
         public Startup(IConfiguration configuration) {
             Configuration = configuration;
         }
@@ -35,12 +35,10 @@ namespace ODataCoreTemplate {
         public void ConfigureServices(IServiceCollection services) {
             // To make this demo simpler, we can use a memory only database populated with mock data
             services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
-
             //// For this demo we are using an in-memory database, but later we will connect to an actual database
             //// https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
             //var connection = @"data source=localhost;initial catalog=ApiDev;integrated security=True;MultipleActiveResultSets=True;ConnectRetryCount=3";
             //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connection, o => o.EnableRetryOnFailure(5, TimeSpan.FromSeconds(3), null)));
-
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
@@ -57,18 +55,18 @@ namespace ODataCoreTemplate {
                 });
             services.AddApiVersioning(options => {
                 options.ReportApiVersions = true;
+                // required when adding versioning to and existing API to allow existing non-versioned queries to succeed (not error with no version specified)
                 options.AssumeDefaultVersionWhenUnspecified = true;
             });
             services.AddOData().EnableApiVersioning();
-            services.AddODataApiExplorer(
-                options => {
-                    // add the versioned api explorer, which also adds IApiVersionDescriptionProvider service
-                    // note: the specified format code will format the version as "'v'major[.minor][-status]"
-                    options.GroupNameFormat = "'v'VVV";
-                    // note: this option is only necessary when versioning by url segment. the SubstitutionFormat
-                    // can also be used to control the format of the API version in route templates
-                    options.SubstituteApiVersionInUrl = true;
-                });
+            services.AddODataApiExplorer(options => {
+                // add the versioned api explorer, which also adds IApiVersionDescriptionProvider service
+                // note: the specified format code will format the version as "'v'major[.minor][-status]"
+                options.GroupNameFormat = "'v'VVV";
+                // note: this option is only necessary when versioning by url segment. the SubstitutionFormat
+                // can also be used to control the format of the API version in route templates
+                options.SubstituteApiVersionInUrl = true;
+            });
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddHttpContextAccessor();
             // Register the Swagger generator, defining 1 or more Swagger documents
@@ -98,7 +96,7 @@ namespace ODataCoreTemplate {
             app.UseAuthentication();
             //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
             var context = app.ApplicationServices.GetService<ApiDbContext>();
-            OdataCoreTemplate.Data.MockData.AddMockData(context);
+            MockData.AddMockData(context);
             //Add custom telemetry initializer to add user name from the HTTP context
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));

@@ -8,7 +8,7 @@ using ODataCoreTemplate.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ODataCoreTemplate.V1 {
+namespace ODataCoreTemplate.Controllers.V1 {
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {

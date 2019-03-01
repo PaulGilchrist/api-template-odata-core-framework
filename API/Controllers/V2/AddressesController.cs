@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ODataCoreTemplate.V2 {
+namespace ODataCoreTemplate.Controllers.V2 {
     [ApiVersion("2.0")]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {

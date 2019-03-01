@@ -14,7 +14,6 @@
         public void Apply(ODataModelBuilder builder, ApiVersion apiVersion) {
             builder.Namespace = "ApiTemplate";
             builder.ContainerName = "ApiTemplateContainer";
-            //builder.EnableLowerCamelCase();
         }
     }
 }

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
-namespace ODataCoreTemplate.V1 {
+namespace ODataCoreTemplate.Controllers.V1 {
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
