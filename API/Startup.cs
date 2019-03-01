@@ -2,7 +2,9 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +41,7 @@ namespace ODataCoreTemplate {
             //// https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
             //var connection = @"data source=localhost;initial catalog=ApiDev;integrated security=True;MultipleActiveResultSets=True;ConnectRetryCount=3";
             //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connection, o => o.EnableRetryOnFailure(5, TimeSpan.FromSeconds(3), null)));
+            // Configure OAuth Authentication
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
@@ -46,6 +49,9 @@ namespace ODataCoreTemplate {
                        ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(',')
                    };
                });
+            // Configure Basic Authentication
+            services.AddAuthentication("BasicAuthentication")
+                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
             services.AddMvc(options => options.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
                 .AddJsonOptions(options => {
                     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
@@ -68,7 +74,6 @@ namespace ODataCoreTemplate {
                 options.SubstituteApiVersionInUrl = true;
             });
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-            services.AddHttpContextAccessor();
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(options => {
                 // add a custom operation filter which sets default values
@@ -77,6 +82,7 @@ namespace ODataCoreTemplate {
                 // integrate xml comments
                 options.IncludeXmlComments(XmlCommentsFilePath);
             });
+            services.AddHttpContextAccessor();
         }
 
         /// <summary>

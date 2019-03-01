@@ -37,11 +37,9 @@
                 TermsOfService = "Shareware",
                 License = new License() { Name = "MIT", Url = "https://opensource.org/licenses/MIT" }
             };
-
             if (description.IsDeprecated) {
                 info.Description += " This API version has been deprecated.";
             }
-
             return info;
         }
     }

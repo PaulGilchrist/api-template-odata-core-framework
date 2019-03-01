@@ -1,5 +1,4 @@
 ﻿namespace API.Classes {
-    using Microsoft.AspNetCore.Mvc.ApiExplorer;
     using Swashbuckle.AspNetCore.Swagger;
     using Swashbuckle.AspNetCore.SwaggerGen;
     using System.Linq;

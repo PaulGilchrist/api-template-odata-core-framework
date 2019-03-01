@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ namespace ODataCoreTemplate.Controllers.V1 {
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
+        [Authorize]
         public async Task<IActionResult> Get() {
             var users = _db.Users;
             if (!await users.AnyAsync()) {
