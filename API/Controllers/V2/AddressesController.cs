@@ -5,10 +5,12 @@ using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ODataCoreTemplate.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -88,8 +90,13 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> Patch([FromBody] DynamicList addressList) {
-            var patchAddresses = addressList.value;
+        public async Task<IActionResult> Patch([FromBody] AddressList addressList) {
+            // Swagger will report a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
+            //     This mean we actually need a DynamicList, so reposition and re-read the body
+            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
+            Request.Body.Position = 0;
+            var patchAddressList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
+            var patchAddresses = patchAddressList.value;
             List<Address> dbAddresses = new List<Address>(0);
             System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
             foreach (JObject patchAddress in patchAddresses) {
@@ -98,10 +105,12 @@ namespace ODataCoreTemplate.Controllers.V2 {
                     return NotFound();
                 }
                 var patchAddressProperties = patchAddress.Properties();
+                // Loop through the changed properties updating the address object
                 foreach (var patchAddressProperty in patchAddressProperties) {
                     foreach (var addressProperty in addressProperties) {
                         if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
                             _db.Entry(dbAddress).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
+                            // Could optionally even support delta's within delta's here
                         }
                     }
                 }

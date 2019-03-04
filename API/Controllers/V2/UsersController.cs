@@ -6,11 +6,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ODataCoreTemplate.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -94,9 +97,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="userList">An object containing an array of partial user objects.
-        /// See GET action for object model.  Since PATCH only requires the id property and those properties being modified, it does not have its own model
-        /// </param>
+        /// <param name="userList">An object containing an array of partial user objects.  Only properties supplied will be updated.</param>
         [HttpPatch]
         [ODataRoute("")]
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
@@ -104,8 +105,13 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
-        public async Task<IActionResult> Patch([FromBody] DynamicList userList) {
-            var patchUsers = userList.value;
+        public async Task<IActionResult> Patch([FromBody] UserList userList) {
+            // Swagger will report a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
+            //     This mean we actually need a DynamicList, so reposition and re-read the body
+            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
+            Request.Body.Position = 0;
+            var patchUserList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
+            var patchUsers = patchUserList.value;
             List<User> dbUsers = new List<User>(0);
             System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
             foreach (JObject patchUser in patchUsers) {
@@ -114,10 +120,12 @@ namespace ODataCoreTemplate.Controllers.V2 {
                     return NotFound();
                 }
                 var patchUseProperties = patchUser.Properties();
+                // Loop through the changed properties updating the user object
                 foreach (var patchUserProperty in patchUseProperties) {
                     foreach (var userProperty in userProperties) {
-                        if(String.Compare(patchUserProperty.Name, userProperty.Name, true)==0) {
+                        if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
                             _db.Entry(dbUser).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
+                            // Could optionally even support delta's within delta's here
                         }
                     }
                 }
@@ -128,38 +136,6 @@ namespace ODataCoreTemplate.Controllers.V2 {
             await _db.SaveChangesAsync();
             return Ok(dbUsers);
         }
-
-        ///// <summary>Bulk edit users</summary>
-        ///// <remarks>
-        ///// Make sure to secure this action before production release
-        ///// </remarks>
-        ///// <param name="deltaUserList">An object containing an array of partial user objects.  Only properties supplied will be updated.</param>
-        //[HttpPatch]
-        //[ODataRoute("")]
-        //[ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
-        //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[ProducesResponseType(typeof(void), 404)] // Not Found
-        ////[Authorize]
-        //public async Task<IActionResult> Patch([FromBody] DeltaUserList deltaUserList) {
-        //    var deltaUsers = deltaUserList.value;
-        //    User[] dbUsers = new User[0];
-        //    foreach (Delta<User> userDelta in deltaUsers) {
-        //        if (!ModelState.IsValid) {
-        //            return BadRequest(ModelState);
-        //        }
-        //        var instance = userDelta.GetInstance();
-        //        var dbUser = _db.Users.Find(instance.Id);
-        //        if (dbUser == null) {
-        //            return NotFound();
-        //        }
-        //        _db.Entry(dbUser).State = EntityState.Detached;
-        //        userDelta.Patch(dbUser);
-        //        dbUsers.Append(dbUser);
-        //    }
-        //    await _db.SaveChangesAsync();
-        //    return Ok(dbUsers);
-        //}
 
         /// <summary>Replace all data for an array of users</summary>
         /// <remarks>

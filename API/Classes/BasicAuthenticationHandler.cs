@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Security.Principal;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 
 namespace API.Classes {
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions> {
-        // https://joonasw.net/view/creating-auth-scheme-in-aspnet-core-2
 
         public BasicAuthenticationHandler(
                 IConfiguration configuration,
@@ -24,6 +21,7 @@ namespace API.Classes {
                 : base(options, logger, encoder, clock) {
             Configuration = configuration;
         }
+
         public IConfiguration Configuration { get; }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
@@ -70,7 +68,6 @@ namespace API.Classes {
             }
             return AuthenticateResult.Fail("Forbidden");
         }
-
 
     }
 

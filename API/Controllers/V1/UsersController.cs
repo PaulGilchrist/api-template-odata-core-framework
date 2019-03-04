@@ -32,7 +32,6 @@ namespace ODataCoreTemplate.Controllers.V1 {
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
-        [Authorize]
         public async Task<IActionResult> Get() {
             var users = _db.Users;
             if (!await users.AnyAsync()) {
