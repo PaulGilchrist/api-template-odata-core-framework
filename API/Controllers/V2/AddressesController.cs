@@ -81,7 +81,6 @@ namespace ODataCoreTemplate.Controllers.V2 {
         /// Make sure to secure this action before production release
         /// </remarks>
         /// <param name="addressList">An object containing an array of partial address objects.
-        /// See GET action for object model.  Since PATCH only requires the id property and those properties being modified, it does not have its own model
         /// </param>
         [HttpPatch]
         [ODataRoute("")]
