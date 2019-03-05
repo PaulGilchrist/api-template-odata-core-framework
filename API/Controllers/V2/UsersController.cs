@@ -32,7 +32,6 @@ namespace ODataCoreTemplate.Controllers.V2 {
             _db = context;
         }
 
-
         /// <summary>Query users</summary>
         [HttpGet]
         [ODataRoute("")]
@@ -106,8 +105,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> Patch([FromBody] UserList userList) {
-            // Swagger will report a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
-            //     This mean we actually need a DynamicList, so reposition and re-read the body
+            // Swagger will document a UserList object model, but what is actually being passed in is a DynamicList since PATCH only passes in the properties that have changed
+            //     This means we actually need a DynamicList, so reposition and re-read the body
             //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
             Request.Body.Position = 0;
             var patchUserList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());

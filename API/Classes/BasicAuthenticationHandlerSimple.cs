@@ -10,21 +10,18 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
 namespace API.Classes {
-    public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions> {
+    public class BasicAuthenticationHandlerSimple : AuthenticationHandler<AuthenticationSchemeOptions> {
 
         public IConfiguration Configuration { get; }
-        private Security _security;
 
-        public BasicAuthenticationHandler(
+        public BasicAuthenticationHandlerSimple(
                 IConfiguration configuration,
                 IOptionsMonitor<AuthenticationSchemeOptions> options,
-                Security security,
                 ILoggerFactory logger,
                 UrlEncoder encoder,
                 ISystemClock clock)
                 : base(options, logger, encoder, clock) {
             Configuration = configuration;
-            _security = security;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
@@ -53,15 +50,6 @@ namespace API.Classes {
                             new Claim(ClaimTypes.Name, name)
                         };
                         var identity = new ClaimsIdentity(claims, Scheme.Name);
-                        var roles = await _security.GetRoles(name);
-                        if (roles == null) {
-                            // Null means the identity was not found
-                            return AuthenticateResult.Fail("Forbidden");
-                        }
-                        // Blank string means the identity was found but has no special roles
-                        foreach (var role in roles) {
-                            identity.AddClaim(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", role));
-                        }
                         var principal = new ClaimsPrincipal(identity);
                         return AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme.Name));
                     } catch {

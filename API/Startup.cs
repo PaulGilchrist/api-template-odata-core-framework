@@ -40,6 +40,8 @@ namespace ODataCoreTemplate {
             //// https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
             //var connection = @"data source=localhost;initial catalog=ApiDev;integrated security=True;MultipleActiveResultSets=True;ConnectRetryCount=3";
             //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connection, o => o.EnableRetryOnFailure(5, TimeSpan.FromSeconds(3), null)));
+            services.AddMemoryCache();
+            services.AddSingleton<Security>();
             // Configure OAuth Authentication
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options => {

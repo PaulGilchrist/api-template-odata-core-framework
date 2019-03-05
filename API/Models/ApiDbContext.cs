@@ -11,10 +11,12 @@ namespace OdataCoreTemplate.Models {
         }
 
         public DbSet<Address> Addresses { get; set; }
+        public DbSet<ClaimRoles> ClaimRoles { get; set; }
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             modelBuilder.Entity<Address>().HasMany(a => a.Users);
+            modelBuilder.Entity<ClaimRoles>();
             modelBuilder.Entity<User>().HasMany(u => u.Addresses);
         }
 

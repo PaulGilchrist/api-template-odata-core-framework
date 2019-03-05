@@ -44,6 +44,8 @@ namespace OdataCoreTemplate.Data {
                         context.Addresses.Update(address);
                     }
                 }
+                // Add a role to the testing user
+                context.ClaimRoles.Add(new ClaimRoles { Name = "testing", Roles = "Admin,PowerUser" });
                 context.SaveChanges();
             }
         }

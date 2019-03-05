@@ -90,7 +90,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> Patch([FromBody] AddressList addressList) {
-            // Swagger will report a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
+            // Swagger will document a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
             //     This mean we actually need a DynamicList, so reposition and re-read the body
             //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
             Request.Body.Position = 0;
