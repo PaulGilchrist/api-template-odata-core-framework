@@ -16,13 +16,7 @@
             var address = builder.EntitySet<Address>("addresses").EntityType;
             address.HasKey(o => o.Id)
                 .HasMany(a => a.Users)
-                .Filter()
-                .Count()
-                .Expand()
-                .OrderBy()
-                .Page()
-                .Select()
-                .Expand();
+                .Count().Expand().Filter().OrderBy().Page().Select();
             // Eample of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
             //     Adding a property would not be considered a breaking change and not warrant a new ApiVersion
             if (apiVersion > ApiVersions.V2) {

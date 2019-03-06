@@ -35,15 +35,15 @@ namespace ODataCoreTemplate.Models {
 
         [Display(Name = "Street Name")]
         [Required]
-        [StringLength(100)]
+        [StringLength(100, MinimumLength=2, ErrorMessage="Must be between 2 and 100 characters")]
         public string StreetName { get; set; }
 
         [Display(Name = "Street Name Line 2")]
-        [StringLength(100)]
+        [StringLength(100, MinimumLength=2, ErrorMessage="Must be between 2 and 100 characters")]
         public string StreetName2 { get; set; }
 
         [Required]
-        [StringLength(50)]
+        [StringLength(50, MinimumLength=2, ErrorMessage="Must be between 2 and 50 characters")]
         public string City { get; set; }
 
         [Required]
@@ -52,15 +52,15 @@ namespace ODataCoreTemplate.Models {
 
         [Display(Name = "Zip Code")]
         [Required]
-        [StringLength(11)]
+        [StringLength(11, MinimumLength=5, ErrorMessage="Must be between 5 and 11 digits")]
         public string ZipCode { get; set; }
 
-        [StringLength(50)]
+        [StringLength(50, MinimumLength=2, ErrorMessage="Must be between 2 and 50 characters")]
         public string Name { get; set; }
 
         public AddressType? Type { get; set; }
 
-        [StringLength(20)]
+        [StringLength(20, MinimumLength=1, ErrorMessage="Must be between 1 and 20 characters")]
         public string Suite { get; set; }
 
         public List<AddressNote> Notes { get; set; } = new List<AddressNote>();
