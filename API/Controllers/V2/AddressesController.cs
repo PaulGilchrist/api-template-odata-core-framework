@@ -239,5 +239,22 @@ namespace ODataCoreTemplate.Controllers.V2 {
             return NoContent();
         }
 
+        /// <summary>Query address notes</summary>
+        [HttpGet]
+        [ODataRoute("({id})/notes")]
+        [ProducesResponseType(typeof(IEnumerable<AddressNote>), 200)] // Ok
+        [ProducesResponseType(typeof(void), 404)]  // Not Found
+        [EnableQuery]
+        public async Task<IActionResult> GetNotes([FromRoute] int id) {
+            var notes = _db.AddressNotes;
+            if (!await notes.AnyAsync(n => n.Address.Id == id)) {
+                return NotFound();
+            }
+            return Ok(notes);
+        }
+
+
+
+
     }
 }

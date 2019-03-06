@@ -44,6 +44,10 @@ namespace OdataCoreTemplate.Data {
                         context.Addresses.Update(address);
                     }
                 }
+                // Add one note object for user and one more for address to show how OData can support two endpoints named "notes" that point to different object types
+                context.UserNotes.Add(new UserNote { User = context.Users.Find(1), Note = "User specific note" });
+                context.AddressNotes.Add(new AddressNote { Address = context.Addresses.Find(1), Note = "Address specific note" });
+                context.SaveChanges();
                 // Add a role to the testing user
                 context.ClaimRoles.Add(new ClaimRoles { Name = "testing", Roles = "Admin,PowerUser" });
                 context.SaveChanges();

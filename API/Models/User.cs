@@ -9,6 +9,16 @@ namespace ODataCoreTemplate.Models {
         public List<User> value { get; set; }
     }
 
+    public class UserNote {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public User User { get; set; }
+        [Required]
+        [StringLength(1024)]
+        public string Note { get; set; }
+    }
+
     public class User {
         [Key]
         public int Id { get; set; }
@@ -28,6 +38,7 @@ namespace ODataCoreTemplate.Models {
         [StringLength(20)]
          public string Phone { get; set; }
         public List<Address> Addresses { get; set; } = new List<Address>();
+        public List<UserNote> Notes { get; set; } = new List<UserNote>();
     }
 
 

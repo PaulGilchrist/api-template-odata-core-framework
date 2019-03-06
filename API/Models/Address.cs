@@ -8,6 +8,16 @@ namespace ODataCoreTemplate.Models {
         public List<Address> value { get; set; }
     }
 
+    public class AddressNote {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public Address Address { get; set; }
+        [Required]
+        [StringLength(1024)]
+        public string Note { get; set; }
+    }
+
     public class Address {
         [Key]
         public int Id { get; set; }
@@ -36,6 +46,7 @@ namespace ODataCoreTemplate.Models {
         public string Name { get; set; }
         [StringLength(20)]
         public string Suite { get; set; }
+        public List<AddressNote> Notes { get; set; } = new List<AddressNote>();
         public List<User> Users { get; set; } = new List<User>();
     }
 

@@ -2,7 +2,6 @@
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection;
 using System.Threading.Tasks;
 
 /*   
@@ -253,6 +250,21 @@ namespace ODataCoreTemplate.Controllers.V2 {
             await _db.SaveChangesAsync();
             return NoContent();
         }
+
+        /// <summary>Query user notes</summary>
+        [HttpGet]
+        [ODataRoute("({id})/notes")]
+        [ProducesResponseType(typeof(IEnumerable<UserNote>), 200)] // Ok
+        [ProducesResponseType(typeof(void), 404)]  // Not Found
+        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
+        public async Task<IActionResult> GetNotes([FromRoute] int id) {
+            var notes = _db.UserNotes;
+            if (!await notes.AnyAsync(n => n.User.Id == id)) {
+                return NotFound();
+            }
+            return Ok(notes);
+        }
+
 
     }
 }
