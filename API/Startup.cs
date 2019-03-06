@@ -82,6 +82,7 @@ namespace ODataCoreTemplate {
                 options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
                 // integrate xml comments
                 options.IncludeXmlComments(XmlCommentsFilePath);
+                options.DescribeAllEnumsAsStrings();
             });
             services.AddHttpContextAccessor();
         }

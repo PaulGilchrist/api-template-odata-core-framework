@@ -7,16 +7,19 @@ You can find steps on how to recreate this project from scratch at [GitHub Docum
 
 ### Feature Details
 
-* Ability to support OData ({id}) syntax
-* Ability for OData and custom parameters to be mixed (ex: GET users({id})
+* Supports the latest versions of OData, OpenAPI/Swagger on .Net Core
+* Supports both OAuth Bearer and Basic authentication including
+* Supports in memory caching and persisted support for authorization roles even for Basic authentication
 * Support for C# comments like /// <summary>, /// <remarks>, /// <params>
     * Swagger does not add much value if these comments do not exists
 * Method for documenting all possible response codes and data structure returned
-* Collapsing the initial Swagger
-* Allowing for nested routes
-* Showing nested/related objects
-* Ability to Get single object by id without need for $filter query
+* Support for object model annotations enhancing Swagger documentation (ex: required properties, min/max length, friendly display names)
 * Versioning (V1 has single object POST, PATCH, & PUT, V2 has bulk POST, PATCH, & PUT)
+* Bulk POST, PUT, and PATCH
+* Allowing for nested routes including objects exposed in API using same object name ("Notes" in this template attached to both Users and Addresses)
+* Enumerations used to allow for human readable input/output while still controlling allowed choices, and tieing back to different database data types
+* Microsoft Azure's Application Insights support including adding of identity data with request telemetry
+* Shows how to create many to many associations without exposing association tables/objects
 
 ### Notes
 For this demo, to show how versioning can handle breaking changes, the V1 version of users has middleName, and the V1 version of addresses has streetName2, with both of them being ignored in version 2.  Both properties exist in the Entity Framework context, but are ignored by OData so a single database can support both entity models.

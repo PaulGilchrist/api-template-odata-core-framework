@@ -31,19 +31,31 @@ namespace OdataCoreTemplate.Data {
                     int r = rnd.Next(addressCount);
                     var address = context.Addresses.Find(r);
                     if(address != null) {
+                        // Set this first address to "Residential"
+                        address.Type = Address.AddressType.Residential;
                         user.Addresses.Add(address);
                         context.Users.Update(user);
+                        address.Users.Add(user);
+                        context.Addresses.Update(address);
                     }
                 }
+                context.SaveChanges();
                 // Associate 1 random user to every address(means some users will have 2 addresses(a good thing)
                 foreach (var address in context.Addresses) {
                     int r = rnd.Next(userCount);
                     var user = context.Users.Find(r);
                     if (user != null) {
+                        // Set any second address to "Business" if not already set
+                        if (address.Type == null) {
+                            address.Type = Address.AddressType.Business;
+                        }
                         address.Users.Add(user);
                         context.Addresses.Update(address);
+                        user.Addresses.Add(address);
+                        context.Users.Update(user);
                     }
                 }
+                context.SaveChanges();
                 // Add one note object for user and one more for address to show how OData can support two endpoints named "notes" that point to different object types
                 context.UserNotes.Add(new UserNote { User = context.Users.Find(1), Note = "User specific note" });
                 context.AddressNotes.Add(new AddressNote { Address = context.Addresses.Find(1), Note = "Address specific note" });
