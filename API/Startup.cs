@@ -57,9 +57,10 @@ namespace ODataCoreTemplate {
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
             services.AddMvc(options => options.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
                 .AddJsonOptions(options => {
-                    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    options.SerializerSettings.PreserveReferencesHandling=PreserveReferencesHandling.None;
+                    options.SerializerSettings.NullValueHandling=NullValueHandling.Ignore;
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
             services.AddApiVersioning(options => {
@@ -87,6 +88,8 @@ namespace ODataCoreTemplate {
                 options.DescribeAllEnumsAsStrings();
             });
             services.AddHttpContextAccessor();
+            services.AddSingleton<TelemetryTracker>();
+
         }
 
         /// <summary>

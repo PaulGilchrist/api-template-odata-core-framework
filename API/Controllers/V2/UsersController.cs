@@ -1,4 +1,5 @@
-﻿using API.Models;
+﻿using API.Classes;
+using API.Models;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
@@ -24,9 +25,11 @@ namespace ODataCoreTemplate.Controllers.V2 {
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
         private OdataCoreTemplate.Models.ApiDbContext _db;
+        private TelemetryTracker _telemetryTracker;
 
-        public UsersController(OdataCoreTemplate.Models.ApiDbContext context) {
+        public UsersController(OdataCoreTemplate.Models.ApiDbContext context, TelemetryTracker telemetryTracker) {
             _db = context;
+            _telemetryTracker = telemetryTracker;
         }
 
         /// <summary>Query users</summary>
@@ -36,11 +39,16 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
         public async Task<IActionResult> Get() {
-            var users = _db.Users;
-            if (!await users.AnyAsync()) {
-                return NotFound();
+            try {
+                var users = _db.Users;
+                if (!await users.AnyAsync()) {
+                    return NotFound();
+                }
+                return Ok(users);
+            } catch(Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            return Ok(users);
         }
 
         /// <summary>Query users by id</summary>
@@ -51,11 +59,16 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All)]
         public async Task<IActionResult> GetUser([FromRoute] int id) {
-            User user = await _db.Users.FindAsync(id);
-            if (user == null) {
-                return NotFound();
+            try {
+                User user = await _db.Users.FindAsync(id);
+                if (user == null) {
+                    return NotFound();
+                }
+                return Ok(user);
+            } catch(Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            return Ok(user);
         }
 
         /// <summary>Create one or more new users</summary>
@@ -71,22 +84,20 @@ namespace ODataCoreTemplate.Controllers.V2 {
         //[Authorize]
         public async Task<IActionResult> Post([FromBody] UserList userList) {
             // Swagger will give error if not using options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
-            /*
-            *   Other things tried were as follows:
-            *   Native array - Not accepted by OData (input will be null)
-            *   JArray - Accepted by OData, but Swagger will not show proper [FromBopdy] object
-            *   ComplexTypeConfiguration<UserList> userList = builder.ComplexType<UserList>(); // Only works for POST
-            *   builder.Action("users").ReturnsCollectionFromEntitySet<User>("users").Parameter<UserList>("userList"); // Only works for POST
-            */
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
-            var users = userList.value;
-            foreach (User user in users) {
-                _db.Users.Add(user);
+            try {
+                var users = userList.value;
+                foreach (User user in users) {
+                    _db.Users.Add(user);
+                }
+                await _db.SaveChangesAsync();
+                return Created("", users);
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            await _db.SaveChangesAsync();
-            return Created("", users);
         }
 
         /// <summary>Bulk edit users</summary>
@@ -105,32 +116,37 @@ namespace ODataCoreTemplate.Controllers.V2 {
             // Swagger will document a UserList object model, but what is actually being passed in is a DynamicList since PATCH only passes in the properties that have changed
             //     This means we actually need a DynamicList, so reposition and re-read the body
             //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
-            Request.Body.Position = 0;
-            var patchUserList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
-            var patchUsers = patchUserList.value;
-            List<User> dbUsers = new List<User>(0);
-            System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
-            foreach (JObject patchUser in patchUsers) {
-                var dbUser = _db.Users.Find((int)patchUser["id"]);
-                if (dbUser == null) {
-                    return NotFound();
-                }
-                var patchUseProperties = patchUser.Properties();
-                // Loop through the changed properties updating the user object
-                foreach (var patchUserProperty in patchUseProperties) {
-                    foreach (var userProperty in userProperties) {
-                        if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
-                            _db.Entry(dbUser).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
-                            // Could optionally even support delta's within delta's here
+            try {
+                Request.Body.Position = 0;
+                var patchUserList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
+                var patchUsers = patchUserList.value;
+                List<User> dbUsers = new List<User>(0);
+                System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
+                foreach (JObject patchUser in patchUsers) {
+                    var dbUser = _db.Users.Find((int)patchUser["id"]);
+                    if (dbUser == null) {
+                        return NotFound();
+                    }
+                    var patchUseProperties = patchUser.Properties();
+                    // Loop through the changed properties updating the user object
+                    foreach (var patchUserProperty in patchUseProperties) {
+                        foreach (var userProperty in userProperties) {
+                            if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
+                                _db.Entry(dbUser).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
+                                // Could optionally even support delta's within delta's here
+                            }
                         }
                     }
+                    _db.Entry(dbUser).State = EntityState.Detached;
+                    _db.Users.Update(dbUser);
+                    dbUsers.Add(dbUser);
                 }
-                _db.Entry(dbUser).State = EntityState.Detached;
-                _db.Users.Update(dbUser);
-                dbUsers.Add(dbUser);
+                await _db.SaveChangesAsync();
+                return Ok(dbUsers);
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            await _db.SaveChangesAsync();
-            return Ok(dbUsers);
         }
 
         /// <summary>Replace all data for an array of users</summary>
@@ -149,17 +165,22 @@ namespace ODataCoreTemplate.Controllers.V2 {
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
-            var users = userList.value;
-            foreach (User user in users) {
-                User dbUser = await _db.Users.FindAsync(user.Id);
-                if (dbUser == null) {
-                    return NotFound();
+            try {
+                var users = userList.value;
+                foreach (User user in users) {
+                    User dbUser = await _db.Users.FindAsync(user.Id);
+                    if (dbUser == null) {
+                        return NotFound();
+                    }
+                    _db.Entry(dbUser).State = EntityState.Detached;
+                    _db.Users.Update(user);
                 }
-                _db.Entry(dbUser).State = EntityState.Detached;
-                _db.Users.Update(user);
+                await _db.SaveChangesAsync();
+                return Ok(users);
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            await _db.SaveChangesAsync();
-            return Ok(users);
         }
 
         /// <summary>Delete the given user</summary>
@@ -174,13 +195,18 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> Delete([FromRoute] int id) {
-            User user = await _db.Users.FindAsync(id);
-            if (user == null) {
-                return NotFound();
+            try {
+                User user = await _db.Users.FindAsync(id);
+                if (user == null) {
+                    return NotFound();
+                }
+                _db.Users.Remove(user);
+                await _db.SaveChangesAsync();
+                return NoContent();
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            _db.Users.Remove(user);
-            await _db.SaveChangesAsync();
-            return NoContent();
         }
 
         /// <summary>Get the addresses for the user with the given id</summary>
@@ -190,8 +216,14 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery]
-        public IQueryable<Address> GetAddresses([FromRoute] int id) {
-            return _db.Users.Where(m => m.Id == id).SelectMany(m => m.Addresses);
+        public async Task<IActionResult> GetAddresses([FromRoute] int id) {
+            try {
+                var addresses = await _db.Users.Where(u => u.Id==id).SelectMany(u => u.Addresses).AnyAsync();
+                return Ok(addresses);
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
+            }
         }
 
         /// <summary>Associate an addresses to the user with the given id</summary>
@@ -208,22 +240,26 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> LinkAddresses([FromRoute] int id, [FromRoute] int addressId) {
-            User user = await _db.Users.FindAsync(id);
-            if (user == null) {
-                return NotFound();
+            try {
+                User user = await _db.Users.FindAsync(id);
+                if (user == null) {
+                    return NotFound();
+                }
+                if (user.Addresses.Any(i => i.Id == addressId)) {
+                    return BadRequest(string.Format("The user with id {0} is already linked to the address with id {1}", id, addressId));
+                }
+                Address address = await _db.Addresses.FindAsync(addressId);
+                if (address == null) {
+                    return NotFound();
+                }
+                user.Addresses.Add(address);
+                await _db.SaveChangesAsync();
+                return NoContent();
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            if (user.Addresses.Any(i => i.Id == addressId)) {
-                return BadRequest(string.Format("The user with id {0} is already linked to the address with id {1}", id, addressId));
-            }
-            Address address = await _db.Addresses.FindAsync(addressId);
-            if (address == null) {
-                return NotFound();
-            }
-            user.Addresses.Add(address);
-            await _db.SaveChangesAsync();
-            return NoContent();
         }
-
 
         /// <summary>Remove an address association from the user with the given id</summary>
         /// <remarks>
@@ -238,17 +274,22 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         // [Authorize]
         public async Task<IActionResult> UnlinkAddresses([FromRoute] int id, [FromRoute] int addressId) {
-            User user = await _db.Users.FindAsync(id);
-            if (user == null) {
-                return NotFound();
+            try {
+                User user = await _db.Users.FindAsync(id);
+                if (user == null) {
+                    return NotFound();
+                }
+                Address address = await _db.Addresses.FindAsync(addressId);
+                if (address == null) {
+                    return NotFound();
+                }
+                user.Addresses.Remove(address);
+                await _db.SaveChangesAsync();
+                return NoContent();
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            Address address = await _db.Addresses.FindAsync(addressId);
-            if (address == null) {
-                return NotFound();
-            }
-            user.Addresses.Remove(address);
-            await _db.SaveChangesAsync();
-            return NoContent();
         }
 
         /// <summary>Query user notes</summary>
@@ -258,13 +299,18 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
         public async Task<IActionResult> GetNotes([FromRoute] int id) {
-            var notes = _db.UserNotes;
-            if (!await notes.AnyAsync(n => n.User.Id == id)) {
-                return NotFound();
+            try {
+                var notes = _db.UserNotes;
+                if (!await notes.AnyAsync(n => n.User.Id == id)) {
+                    return NotFound();
+                }
+                return Ok(notes);
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex);
             }
-            return Ok(notes);
         }
 
-
     }
+
 }
