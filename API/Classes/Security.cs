@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using OdataCoreTemplate.Models;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace API.Classes {
@@ -30,5 +31,10 @@ namespace API.Classes {
             }
             return roles;
         }
+
+        public static bool HasRole(ClaimsPrincipal user, string role) {
+            return ((ClaimsIdentity)user.Identity).HasClaim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", role);
+        }
+
     }
 }

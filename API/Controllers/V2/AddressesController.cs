@@ -42,7 +42,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -62,7 +62,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(address);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -90,7 +90,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Created("", addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -110,7 +110,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         public async Task<IActionResult> Patch([FromBody] AddressList addressList) {
             // Swagger will document a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
             //     This mean we actually need a DynamicList, so reposition and re-read the body
-            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
+            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api/api-odata-bulk-updates.md
             try {
                 Request.Body.Position = 0;
                 var patchAddressList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
@@ -128,7 +128,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                         foreach (var addressProperty in addressProperties) {
                             if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
                                 _db.Entry(dbAddress).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
-                                // Could optionally even support delta's within delta's here
+                                // Could optionally even support deltas within deltas here
                             }
                         }
                     }
@@ -140,7 +140,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(dbAddresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -173,7 +173,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -199,7 +199,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -216,7 +216,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -252,7 +252,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -284,7 +284,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -303,7 +303,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 

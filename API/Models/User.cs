@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNet.OData;
-using Microsoft.AspNetCore.JsonPatch;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ODataCoreTemplate.Models {

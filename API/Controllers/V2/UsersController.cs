@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 /*   
@@ -47,7 +48,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(users);
             } catch(Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -67,7 +68,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(user);
             } catch(Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -96,7 +97,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Created("", users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -109,13 +110,14 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ODataRoute("")]
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
+        [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize]
         public async Task<IActionResult> Patch([FromBody] UserList userList) {
             // Swagger will document a UserList object model, but what is actually being passed in is a DynamicList since PATCH only passes in the properties that have changed
             //     This means we actually need a DynamicList, so reposition and re-read the body
-            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api-odata-bulk-updates.md
+            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api/api-odata-bulk-updates.md
             try {
                 Request.Body.Position = 0;
                 var patchUserList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
@@ -130,10 +132,14 @@ namespace ODataCoreTemplate.Controllers.V2 {
                     var patchUseProperties = patchUser.Properties();
                     // Loop through the changed properties updating the user object
                     foreach (var patchUserProperty in patchUseProperties) {
+                        // Example of column level security with appropriate description if forbidden
+                        if ((String.Compare(patchUserProperty.Name, "Email", true)==0) && !Security.HasRole(User, "Admin")) {
+                            return StatusCode(403, new ForbiddenException { SecuredColumn="email", RoleRequired="Admin", Description="Modification to property 'email' requires role 'Admin'"});
+                        }
                         foreach (var userProperty in userProperties) {
                             if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
                                 _db.Entry(dbUser).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
-                                // Could optionally even support delta's within delta's here
+                                // Could optionally even support deltas within deltas here
                             }
                         }
                     }
@@ -145,7 +151,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(dbUsers);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -179,7 +185,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -205,7 +211,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -222,7 +228,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -257,7 +263,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -288,7 +294,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -307,7 +313,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
 
