@@ -7,9 +7,10 @@ You can find steps on how to recreate this project from scratch at [GitHub Docum
 
 ### Feature Details
 
-* Supports the latest versions of OData, OpenAPI/Swagger on .Net Core
-* Supports both OAuth Bearer and Basic authentication including
-* Supports in memory caching and persisted support for authorization roles even for Basic authentication
+* Supports the latest versions of OData, OpenAPI/Swagger, and Entity Framework on .Net Core
+* Supports both OAuth Bearer and Basic authentication
+  * Supports in memory caching and persisted support for authorization roles even for Basic authentication
+  * Examples of both HTTP action, and even property level access granularity
 * Support for C# comments like /// <summary>, /// <remarks>, /// <params>
     * Swagger does not add much value if these comments do not exists
 * Method for documenting all possible response codes and data structure returned
@@ -18,7 +19,9 @@ You can find steps on how to recreate this project from scratch at [GitHub Docum
 * Bulk POST, PUT, and PATCH
 * Allowing for nested routes including objects exposed in API using same object name ("Notes" in this template attached to both Users and Addresses)
 * Enumerations used to allow for human readable input/output while still controlling allowed choices, and tieing back to different database data types
-* Microsoft Azure's Application Insights support including adding of identity data with request telemetry
+* Microsoft Azure's Application Insights support
+  * Including adding of identity data with request telemetry
+  * Inlcudes example of custom exception handling responses and more detailed exception telemetry tracking
 * Shows how to create many to many associations without exposing association tables/objects
 
 ### Notes

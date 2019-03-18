@@ -19,7 +19,7 @@
                 .Count().Expand().Filter().OrderBy().Page().Select();
             // Eample of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
             //     Adding a property would not be considered a breaking change and not warrant a new ApiVersion
-            if (apiVersion > ApiVersions.V2) {
+            if (apiVersion >= ApiVersions.V2) {
                 address.Ignore(o => o.StreetName2);
             }
 

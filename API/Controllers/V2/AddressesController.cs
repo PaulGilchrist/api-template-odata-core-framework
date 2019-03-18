@@ -55,8 +55,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
         public async Task<IActionResult> GetSingle([FromRoute] int id) {
             try {
-                Address address = await _db.Addresses.FindAsync(id);
-                if (address == null) {
+                var address = _db.Addresses.Where(e => e.Id==id);
+                if (!await address.AnyAsync()) {
                     return NotFound();
                 }
                 return Ok(address);
@@ -79,11 +79,12 @@ namespace ODataCoreTemplate.Controllers.V2 {
         //[Authorize]
         public async Task<IActionResult> Post([FromBody] AddressList addressList) {
             try {
+                if (!ModelState.IsValid) {
+                    return BadRequest(ModelState);
+                }
                 var addresses = addressList.value;
                 foreach (Address address in addresses) {
-                    if (!ModelState.IsValid) {
-                        return BadRequest(ModelState);
-                    }
+                    // If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
                     _db.Addresses.Add(address);
                 }
                 await _db.SaveChangesAsync();

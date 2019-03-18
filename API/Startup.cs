@@ -36,12 +36,14 @@ namespace ODataCoreTemplate {
         public void ConfigureServices(IServiceCollection services) {
             // To make this demo simpler, we can use a memory only database populated with mock data
             services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
-            ////// For this demo we are using an in-memory database, but later we will connect to an actual database
-            ////// https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
+            // For this demo we are using an in-memory database, but later we will connect to an actual database
+            // https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
+
             //var connectionString = Configuration.GetValue<string>("Sql:ConnectionString");
             //var maxRetryCount = Configuration.GetValue<int>("Sql:MaxRetryCount");
             //var maxRetryDelay = Configuration.GetValue<int>("Sql:MaxRetryDelay");
-            //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)));
+            //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), ServiceLifetime.Singleton);
+
             services.AddMemoryCache();
             services.AddSingleton<Security>();
             // Configure OAuth Authentication

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using ODataCoreTemplate.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ODataCoreTemplate.Controllers.V1 {
@@ -40,8 +41,8 @@ namespace ODataCoreTemplate.Controllers.V1 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
         public async Task<IActionResult> GetSingle([FromRoute] int id) {
-            Address address = await _db.Addresses.FindAsync(id);
-            if (address == null) {
+            var address = _db.Addresses.Where(e => e.Id==id);
+            if (!await address.AnyAsync()) {
                 return NotFound();
             }
             return Ok(address);

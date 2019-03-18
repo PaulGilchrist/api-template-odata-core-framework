@@ -61,8 +61,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All)]
         public async Task<IActionResult> GetUser([FromRoute] int id) {
             try {
-                User user = await _db.Users.FindAsync(id);
-                if (user == null) {
+                var user = _db.Users.Where(e => e.Id==id);
+                if (!await user.AnyAsync()) {
                     return NotFound();
                 }
                 return Ok(user);
@@ -85,12 +85,13 @@ namespace ODataCoreTemplate.Controllers.V2 {
         //[Authorize]
         public async Task<IActionResult> Post([FromBody] UserList userList) {
             // Swagger will give error if not using options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
-            if (!ModelState.IsValid) {
-                return BadRequest(ModelState);
-            }
             try {
+                if (!ModelState.IsValid) {
+                    return BadRequest(ModelState);
+                }
                 var users = userList.value;
                 foreach (User user in users) {
+                    // If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
                     _db.Users.Add(user);
                 }
                 await _db.SaveChangesAsync();

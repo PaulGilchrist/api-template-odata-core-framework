@@ -48,8 +48,8 @@ namespace ODataCoreTemplate.Controllers.V1 {
         [ProducesResponseType(typeof(void), 404)] // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All)]
         public async Task<IActionResult> GetUser([FromRoute] int id) {
-            User user = await _db.Users.FindAsync(id);
-            if (user == null) {
+            var user = _db.Users.Where(e => e.Id==id);
+            if (!await user.AnyAsync()) {
                 return NotFound();
             }
             return Ok(user);
