@@ -3,6 +3,7 @@ using API.Models;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -38,7 +40,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ODataRoute("")]
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
-        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
+        [EnableQuery]
         public async Task<IActionResult> Get() {
             try {
                 var users = _db.Users;
@@ -58,7 +60,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ODataRoute("({id})")]
         [ProducesResponseType(typeof(User), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All)]
+        [EnableQuery]
         public async Task<IActionResult> GetUser([FromRoute] int id) {
             try {
                 var user = _db.Users.Where(e => e.Id==id);
@@ -216,6 +218,75 @@ namespace ODataCoreTemplate.Controllers.V2 {
             }
         }
 
+        /// <summary>Associate an addresses to the user with the given id</summary>
+        /// <remarks>
+        /// Make sure to secure this action before production release
+        /// </remarks>
+        /// <param name="id">The user id</param>
+        /// <param name="reference">The Uri of the address being associated.  Ex: {"@odata.id":"http://api.company.com/odata/address(1)"}</param>
+        [HttpPost]
+        [ODataRoute("({id})/addresses/$ref")]
+        [ProducesResponseType(typeof(void), 204)] // No Content
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 404)] // Not Found
+        //[Authorize]
+        public async Task<IActionResult> PostAddressRef([FromRoute] int id, [FromBody] ODataReference reference) {
+            try {
+                User user = await _db.Users.FindAsync(id);
+                if (user==null) {
+                    return NotFound();
+                }
+                var addressId = Convert.ToInt32(ReferenceHelper.GetKeyFromUrl(reference.uri));
+                if (user.Addresses.Any(i => i.Id==addressId)) {
+                    return StatusCode(409, string.Format("Conflict - The user with id {0} is already linked to the address with id {1}", id, addressId));
+                }
+                Address address = await _db.Addresses.FindAsync(addressId);
+                if (address==null) {
+                    return NotFound();
+                }
+                user.Addresses.Add(address);
+                await _db.SaveChangesAsync();
+                return NoContent();
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+            }
+        }
+
+        /// <summary>Remove an address association from the user with the given id</summary>
+        /// <remarks>
+        /// Make sure to secure this action before production release
+        /// </remarks>
+        /// <param name="userId">The user id</param>
+        /// <param name="id">The Uri of the address association being removed.  Ex: id=http://api.company.com/odata/address(1)</param>
+        [HttpDelete]
+        [ODataRoute("({userId})/addresses/$ref")]
+        [ProducesResponseType(typeof(void), 204)] // No Content
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 404)] // Not Found
+        [AcceptVerbs("DELETE")]
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteAddressRef([FromRoute] int userId, [FromQuery] Uri id) {
+            // This meets the spec, but so does having Uri in [FromBody] so it does not have to use the variable "id" I would prefer to use instead of userId
+            try {
+                User user = await _db.Users.Include(e => e.Addresses).FirstOrDefaultAsync(e => e.Id==userId);
+                if (user==null) {
+                    return NotFound();
+                }
+                var addressId = Convert.ToInt32(ReferenceHelper.GetKeyFromUrl(id));
+                Address address = user.Addresses.First(e => e.Id==addressId);
+                if (address==null) {
+                    return NotFound();
+                }
+                user.Addresses.Remove(address);
+                await _db.SaveChangesAsync();
+                return NoContent();
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+            }
+        }
+
         /// <summary>Get the addresses for the user with the given id</summary>
         /// <param name="id">The user id</param>
         [HttpGet]
@@ -225,77 +296,14 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [EnableQuery]
         public async Task<IActionResult> GetAddresses([FromRoute] int id) {
             try {
-                var addresses = await _db.Users.Where(u => u.Id==id).SelectMany(u => u.Addresses).AnyAsync();
+                var addresses = _db.Users.Where(e => e.Id==id).SelectMany(e => e.Addresses);
+                if (!await addresses.AnyAsync()) {
+                    return NotFound();
+                }
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
-            }
-        }
-
-        /// <summary>Associate an addresses to the user with the given id</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
-        /// <param name="id">The user id</param>
-        /// <param name="addressId">The address id to associate with the user</param>
-        [HttpPost]
-        [ODataRoute("({id})/addresses({addressId})")]
-        [ProducesResponseType(typeof(void), 204)] // No Content
-        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
-        public async Task<IActionResult> LinkAddresses([FromRoute] int id, [FromRoute] int addressId) {
-            try {
-                User user = await _db.Users.FindAsync(id);
-                if (user == null) {
-                    return NotFound();
-                }
-                if (user.Addresses.Any(i => i.Id == addressId)) {
-                    return BadRequest(string.Format("The user with id {0} is already linked to the address with id {1}", id, addressId));
-                }
-                Address address = await _db.Addresses.FindAsync(addressId);
-                if (address == null) {
-                    return NotFound();
-                }
-                user.Addresses.Add(address);
-                await _db.SaveChangesAsync();
-                return NoContent();
-            } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
-            }
-        }
-
-        /// <summary>Remove an address association from the user with the given id</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
-        /// <param name="id">The user id</param>
-        /// <param name="addressId">The address id to remove association from the user</param>
-        [HttpDelete]
-        [ODataRoute("({id})/addresses({addressId})")]
-        [ProducesResponseType(typeof(void), 204)] // No Content
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        [ProducesResponseType(typeof(void), 404)] // Not Found
-        // [Authorize]
-        public async Task<IActionResult> UnlinkAddresses([FromRoute] int id, [FromRoute] int addressId) {
-            try {
-                User user = await _db.Users.FindAsync(id);
-                if (user == null) {
-                    return NotFound();
-                }
-                Address address = await _db.Addresses.FindAsync(addressId);
-                if (address == null) {
-                    return NotFound();
-                }
-                user.Addresses.Remove(address);
-                await _db.SaveChangesAsync();
-                return NoContent();
-            } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
             }
         }
 
@@ -304,17 +312,17 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ODataRoute("({id})/notes")]
         [ProducesResponseType(typeof(IEnumerable<UserNote>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
-        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All, MaxNodeCount = 100000)]
+        [EnableQuery]
         public async Task<IActionResult> GetNotes([FromRoute] int id) {
             try {
                 var notes = _db.UserNotes;
-                if (!await notes.AnyAsync(n => n.User.Id == id)) {
+                if (!await notes.AnyAsync(n => n.User.Id==id)) {
                     return NotFound();
                 }
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
             }
         }
 
