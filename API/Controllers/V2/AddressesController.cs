@@ -27,6 +27,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
             _telemetryTracker=telemetryTracker;
         }
 
+        #region CRUD Operations
+
         /// <summary>Query addresses</summary>
         [HttpGet]
         [ODataRoute("")]
@@ -204,6 +206,10 @@ namespace ODataCoreTemplate.Controllers.V2 {
             }
         }
 
+        #endregion
+
+        #region REFs
+
         /// <summary>Associate a user to the address with the given id</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
@@ -215,7 +221,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostUserRef([FromRoute] int id, [FromBody] ODataReference reference) {
             try {
                 Address address = await _db.Addresses.FindAsync(id);
@@ -250,7 +256,6 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        [AcceptVerbs("DELETE")]
         //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUserRef([FromRoute] int addressId, [FromQuery] Uri id) {
             // This meets the spec, but so does having Uri in [FromBody] so it does not have to use the variable "id" I would prefer to use instead of addressId
@@ -293,91 +298,6 @@ namespace ODataCoreTemplate.Controllers.V2 {
             }
         }
 
-        ///// <summary>Get the users for the address with the given id</summary>
-        ///// <param name="id">The address id</param>
-        //[HttpGet]
-        //[ODataRoute("({id})/users")]
-        //[ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
-        //[ProducesResponseType(typeof(void), 404)]  // Not Found
-        //[EnableQuery]
-        //public async Task<IActionResult> GetUsers([FromRoute] int id) {
-        //    try {
-        //        var users = await _db.Addresses.Where(a => a.Id==id).SelectMany(a => a.Users).AnyAsync();
-        //        return Ok(users);
-        //    } catch (Exception ex) {
-        //        _telemetryTracker.TrackException(ex);
-        //        return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
-        //    }
-        //}
-
-
-        ///// <summary>Associate a user to the address with the given id</summary>
-        ///// <remarks>
-        ///// Make sure to secure this action before production release
-        ///// </remarks>
-        ///// <param name="id">The user id</param>
-        ///// <param name="userId">The user id to associate with the address</param>
-        //[HttpPost]
-        //[ODataRoute("({id})/users({userId})")]
-        //[ProducesResponseType(typeof(void), 204)] // No Content
-        //[ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[ProducesResponseType(typeof(void), 404)] // Not Found
-        ////[Authorize]
-        //public async Task<IActionResult> LinkAddresses([FromRoute] int id, [FromRoute] int userId) {
-        //    try {
-        //        Address address = await _db.Addresses.FindAsync(id);
-        //        if (address == null) {
-        //            return NotFound();
-        //        }
-        //        if (address.Users.Any(i => i.Id == userId)) {
-        //            return BadRequest(string.Format("The address with id {0} is already linked to the user with id {1}", id, userId));
-        //        }
-        //        User user = await _db.Users.FindAsync(userId);
-        //        if (user == null) {
-        //            return NotFound();
-        //        }
-        //        address.Users.Add(user);
-        //        await _db.SaveChangesAsync();
-        //        return NoContent();
-        //    } catch (Exception ex) {
-        //        _telemetryTracker.TrackException(ex);
-        //        return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
-        //    }
-        //}
-
-
-        ///// <summary>Remove an user association from the address with the given id</summary>
-        ///// <remarks>
-        ///// Make sure to secure this action before production release
-        ///// </remarks>
-        ///// <param name="id">The address id</param>
-        ///// <param name="userId">The user id to remove association from the address</param>
-        //[HttpDelete]
-        //[ODataRoute("({id})/users({userId})")]
-        //[ProducesResponseType(typeof(void), 204)] // No Content
-        //[ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[ProducesResponseType(typeof(void), 404)] // Not Found
-        //// [Authorize]
-        //public async Task<IActionResult> UnlinkAddresses([FromRoute] int id, [FromRoute] int userId) {
-        //    try {
-        //        Address address = await _db.Addresses.FindAsync(id);
-        //        if (address == null) {
-        //            return NotFound();
-        //        }
-        //        User user = await _db.Users.FindAsync(userId);
-        //        if (user == null) {
-        //            return NotFound();
-        //        }
-        //        address.Users.Remove(user);
-        //        await _db.SaveChangesAsync();
-        //        return NoContent();
-        //    } catch (Exception ex) {
-        //        _telemetryTracker.TrackException(ex);
-        //        return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
-        //    }
-        //}
-
         /// <summary>Query address notes</summary>
         [HttpGet]
         [ODataRoute("({id})/notes")]
@@ -396,6 +316,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
             }
         }
+ 
+       #endregion
 
     }
 

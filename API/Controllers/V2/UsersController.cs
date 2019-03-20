@@ -1,9 +1,7 @@
 ﻿using API.Classes;
 using API.Models;
 using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 /*   
@@ -34,6 +30,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
             _db = context;
             _telemetryTracker = telemetryTracker;
         }
+
+        #region CRUD Operations
 
         /// <summary>Query users</summary>
         [HttpGet]
@@ -84,7 +82,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[Authorize]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Post([FromBody] UserList userList) {
             // Swagger will give error if not using options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
             try {
@@ -116,7 +114,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
         [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Patch([FromBody] UserList userList) {
             // Swagger will document a UserList object model, but what is actually being passed in is a DynamicList since PATCH only passes in the properties that have changed
             //     This means we actually need a DynamicList, so reposition and re-read the body
@@ -169,7 +167,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Put([FromBody] UserList userList) {
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
@@ -202,7 +200,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete([FromRoute] int id) {
             try {
                 User user = await _db.Users.FindAsync(id);
@@ -218,6 +216,10 @@ namespace ODataCoreTemplate.Controllers.V2 {
             }
         }
 
+        #endregion
+
+        #region REFs
+
         /// <summary>Associate an addresses to the user with the given id</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
@@ -229,7 +231,7 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostAddressRef([FromRoute] int id, [FromBody] ODataReference reference) {
             try {
                 User user = await _db.Users.FindAsync(id);
@@ -264,7 +266,6 @@ namespace ODataCoreTemplate.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        [AcceptVerbs("DELETE")]
         //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAddressRef([FromRoute] int userId, [FromQuery] Uri id) {
             // This meets the spec, but so does having Uri in [FromBody] so it does not have to use the variable "id" I would prefer to use instead of userId
@@ -327,5 +328,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
         }
 
     }
+
+    #endregion
+
 
 }
