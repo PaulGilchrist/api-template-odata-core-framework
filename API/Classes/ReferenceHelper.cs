@@ -1,13 +1,4 @@
-﻿using API.Configuration;
-using Microsoft.AspNet.OData.Builder;
-using Microsoft.AspNet.OData.Routing;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.OData.UriParser;
-using ODataCoreTemplate.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+﻿using System;
 
 namespace API.Classes {
     public class ReferenceHelper {

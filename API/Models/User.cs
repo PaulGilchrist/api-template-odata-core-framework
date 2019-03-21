@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace ODataCoreTemplate.Models {
+namespace API.Models {
 
     public class UserList {
         public List<User> value { get; set; }
@@ -46,6 +46,20 @@ namespace ODataCoreTemplate.Models {
         public List<Address> Addresses { get; set; } = new List<Address>();
 
         public List<UserNote> Notes { get; set; } = new List<UserNote>();
+
+        [Required]
+        public System.DateTime CreatedDate { get; set; }
+
+        [Required]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "CreatedBy must be between 1 and 50 characters")]
+        public string CreatedBy { get; set; }
+
+        [Required]
+        public System.DateTime LastModifiedDate { get; set; }
+
+        [Required]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "LastModifiedBy must be between 1 and 50 characters")]
+        public string LastModifiedBy { get; set; }
     }
 
 

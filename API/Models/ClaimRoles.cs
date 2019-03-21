@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ODataCoreTemplate.Models {
+namespace API.Models {
     public class ClaimRoles {
         [Key]
         [Required]
@@ -9,7 +9,7 @@ namespace ODataCoreTemplate.Models {
         public string Name { get; set; }
         [Display(Name = "Roles")] //Comma delimited string containing 0 or more roles
         [Required]
-        [StringLength(50)]
+        [StringLength(2048)]
         public string Roles { get; set; }
     }
 }

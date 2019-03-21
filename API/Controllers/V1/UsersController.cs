@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNet.OData;
+﻿using API.Configuration;
+using API.Models;
+using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using ODataCoreTemplate.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,13 +15,13 @@ using System.Threading.Tasks;
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
-namespace ODataCoreTemplate.Controllers.V1 {
+namespace API.Controllers.V1 {
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
-        private OdataCoreTemplate.Models.ApiDbContext _db;
+        private ApiDbContext _db;
 
-        public UsersController(OdataCoreTemplate.Models.ApiDbContext context) {
+        public UsersController(ApiDbContext context) {
             _db = context;
         }
 

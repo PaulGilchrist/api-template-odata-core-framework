@@ -1,13 +1,14 @@
 ﻿using API.Classes;
+using API.Configuration;
 using API.Models;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ODataCoreTemplate.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,14 +20,14 @@ using System.Threading.Tasks;
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
-namespace ODataCoreTemplate.Controllers.V2 {
+namespace API.Controllers.V2 {
     [ApiVersion("2.0")]
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
-        private OdataCoreTemplate.Models.ApiDbContext _db;
+        private ApiDbContext _db;
         private TelemetryTracker _telemetryTracker;
 
-        public UsersController(OdataCoreTemplate.Models.ApiDbContext context, TelemetryTracker telemetryTracker) {
+        public UsersController(ApiDbContext context, TelemetryTracker telemetryTracker) {
             _db = context;
             _telemetryTracker = telemetryTracker;
         }
@@ -91,7 +92,15 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 }
                 var users = userList.value;
                 foreach (User user in users) {
-                    // If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
+                    //// If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
+                    //var dbUsers = _db.Users.Where(e => e.SSN==user.SSN);
+                    //if (await dbUsers.AnyAsync()) {
+                    //    return StatusCode(409 /* Conflict */, "User already exists with this SSN"); ; //
+                    //}
+                    user.CreatedDate=DateTime.UtcNow;
+                    user.CreatedBy=User.Identity.Name;
+                    user.LastModifiedDate=DateTime.UtcNow;
+                    user.LastModifiedBy=User.Identity.Name;
                     _db.Users.Add(user);
                 }
                 await _db.SaveChangesAsync();
@@ -126,8 +135,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 List<User> dbUsers = new List<User>(0);
                 System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
                 foreach (JObject patchUser in patchUsers) {
-                    var dbUser = _db.Users.Find((int)patchUser["id"]);
-                    if (dbUser == null) {
+                    var user = _db.Users.Find((int)patchUser["id"]);
+                    if (user== null) {
                         return NotFound();
                     }
                     var patchUseProperties = patchUser.Properties();
@@ -139,14 +148,16 @@ namespace ODataCoreTemplate.Controllers.V2 {
                         }
                         foreach (var userProperty in userProperties) {
                             if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
-                                _db.Entry(dbUser).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
+                                _db.Entry(user).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
                                 // Could optionally even support deltas within deltas here
                             }
                         }
                     }
-                    _db.Entry(dbUser).State = EntityState.Detached;
-                    _db.Users.Update(dbUser);
-                    dbUsers.Add(dbUser);
+                    user.LastModifiedDate=DateTime.UtcNow;
+                    user.LastModifiedBy=User.Identity.Name;
+                    _db.Entry(user).State = EntityState.Detached;
+                    _db.Users.Update(user);
+                    dbUsers.Add(user);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(dbUsers);
@@ -180,6 +191,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
                         return NotFound();
                     }
                     _db.Entry(dbUser).State = EntityState.Detached;
+                    dbUser.LastModifiedDate=DateTime.UtcNow;
+                    dbUser.LastModifiedBy=User.Identity.Name;
                     _db.Users.Update(user);
                 }
                 await _db.SaveChangesAsync();
@@ -211,8 +224,17 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                if (ex.InnerException.InnerException.Message.Contains(Constants.deleteForeignKey)) {
+                    // Reset the remove    
+                    foreach (EntityEntry entityEntry in _db.ChangeTracker.Entries().Where(e => e.State==EntityState.Deleted)) {
+                        entityEntry.State=EntityState.Unchanged;
+                    }
+                    _telemetryTracker.TrackException(ex);
+                    return StatusCode(409, "Conflict - Database foreign key constraints prevent this object from being deleted");
+                } else {
+                    _telemetryTracker.TrackException(ex);
+                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                }
             }
         }
 

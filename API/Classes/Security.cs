@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using OdataCoreTemplate.Models;
+﻿using API.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace API.Classes {
     public class Security {
         private IMemoryCache _cache;
-        private OdataCoreTemplate.Models.ApiDbContext _db;
+        private ApiDbContext _db;
 
         public Security(ApiDbContext context, IMemoryCache memoryCache) {
             _cache = memoryCache;

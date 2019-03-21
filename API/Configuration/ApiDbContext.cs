@@ -1,10 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using OdataCoreTemplate.Data;
-using ODataCoreTemplate.Models;
-using System;
-using System.Threading.Tasks;
+﻿using API.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace OdataCoreTemplate.Models {
+namespace API.Configuration {
     public class ApiDbContext : DbContext {
 
         public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) {

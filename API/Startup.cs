@@ -1,4 +1,6 @@
 ﻿using API.Classes;
+using API.Configuration;
+using API.Data;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -18,8 +20,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using OdataCoreTemplate.Data;
-using OdataCoreTemplate.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;

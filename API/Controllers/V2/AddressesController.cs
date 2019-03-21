@@ -1,4 +1,5 @@
 ﻿using API.Classes;
+using API.Configuration;
 using API.Models;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
@@ -6,23 +7,23 @@ using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ODataCoreTemplate.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ODataCoreTemplate.Controllers.V2 {
+namespace API.Controllers.V2 {
     [ApiVersion("2.0")]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {
-        private OdataCoreTemplate.Models.ApiDbContext _db;
+        private ApiDbContext _db;
         private TelemetryTracker _telemetryTracker;
 
-        public AddressesController(OdataCoreTemplate.Models.ApiDbContext context, TelemetryTracker telemetryTracker) {
+        public AddressesController(ApiDbContext context, TelemetryTracker telemetryTracker) {
             _db = context;
             _telemetryTracker=telemetryTracker;
         }
@@ -87,6 +88,10 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 var addresses = addressList.value;
                 foreach (Address address in addresses) {
                     // If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
+                    address.CreatedDate=DateTime.UtcNow;
+                    address.CreatedBy=User.Identity.Name;
+                    address.LastModifiedDate=DateTime.UtcNow;
+                    address.LastModifiedBy=User.Identity.Name;
                     _db.Addresses.Add(address);
                 }
                 await _db.SaveChangesAsync();
@@ -121,8 +126,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 List<Address> dbAddresses = new List<Address>(0);
                 System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
                 foreach (JObject patchAddress in patchAddresses) {
-                    var dbAddress = _db.Addresses.Find((int)patchAddress["id"]);
-                    if (dbAddress == null) {
+                    var address = _db.Addresses.Find((int)patchAddress["id"]);
+                    if (address== null) {
                         return NotFound();
                     }
                     var patchAddressProperties = patchAddress.Properties();
@@ -130,14 +135,16 @@ namespace ODataCoreTemplate.Controllers.V2 {
                     foreach (var patchAddressProperty in patchAddressProperties) {
                         foreach (var addressProperty in addressProperties) {
                             if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
-                                _db.Entry(dbAddress).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
+                                _db.Entry(address).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
                                 // Could optionally even support deltas within deltas here
                             }
                         }
                     }
-                    _db.Entry(dbAddress).State = EntityState.Detached;
-                    _db.Addresses.Update(dbAddress);
-                    dbAddresses.Add(dbAddress);
+                    address.LastModifiedDate=DateTime.UtcNow;
+                    address.LastModifiedBy=User.Identity.Name;
+                    _db.Entry(address).State = EntityState.Detached;
+                    _db.Addresses.Update(address);
+                    dbAddresses.Add(address);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(dbAddresses);
@@ -170,6 +177,8 @@ namespace ODataCoreTemplate.Controllers.V2 {
                     if (dbAddress == null) {
                         return NotFound();
                     }
+                    address.LastModifiedDate=DateTime.UtcNow;
+                    address.LastModifiedBy=User.Identity.Name;
                     _db.Addresses.Update(address);
                 }
                 await _db.SaveChangesAsync();
@@ -201,8 +210,17 @@ namespace ODataCoreTemplate.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                if (ex.InnerException.InnerException.Message.Contains(Constants.deleteForeignKey)) {
+                    // Reset the remove    
+                    foreach (EntityEntry entityEntry in _db.ChangeTracker.Entries().Where(e => e.State==EntityState.Deleted)) {
+                        entityEntry.State=EntityState.Unchanged;
+                    }
+                    _telemetryTracker.TrackException(ex);
+                    return StatusCode(409, "Conflict - Database foreign key constraints prevent this object from being deleted");
+                } else {
+                    _telemetryTracker.TrackException(ex);
+                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                }
             }
         }
 

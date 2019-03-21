@@ -1,21 +1,22 @@
-﻿using Microsoft.AspNet.OData;
+﻿using API.Configuration;
+using API.Models;
+using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using ODataCoreTemplate.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ODataCoreTemplate.Controllers.V1 {
+namespace API.Controllers.V1 {
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {
-        private OdataCoreTemplate.Models.ApiDbContext _db;
+        private ApiDbContext _db;
 
-        public AddressesController(OdataCoreTemplate.Models.ApiDbContext context) {
+        public AddressesController(ApiDbContext context) {
             _db = context;
         }
 
