@@ -17,7 +17,7 @@ namespace API.Classes {
         public async Task<string[]> GetRoles(string name) {
             // Returns a comma separated list of claim roles as a string
             // First try and get roles from memory cache
-            string[] roles = null;
+            string[] roles = new string[] { };
             if (!_cache.TryGetValue("roles-" + name, out roles)) {
                 // try and get roles from database
                 var claimRoles = await _db.ClaimRoles.FindAsync(name);

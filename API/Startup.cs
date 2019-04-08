@@ -20,10 +20,13 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace ODataCoreTemplate {
@@ -85,11 +88,13 @@ namespace ODataCoreTemplate {
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(options => {
                 // add a custom operation filter which sets default values
-                options.OperationFilter<SwaggerDefaultValues>();
                 options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
                 // integrate xml comments
                 options.IncludeXmlComments(XmlCommentsFilePath);
                 options.DescribeAllEnumsAsStrings();
+                options.AddSecurityDefinition("Basic", new ApiKeyScheme() { In = "header", Description = "Please insert Basic token into field", Name = "Authorization", Type = "apiKey" });
+                options.OperationFilter<SwaggerDefaultValues>();
+                options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> { { "Basic", Enumerable.Empty<string>() }, });
             });
             services.AddHttpContextAccessor();
             // Add support for GetUrlHelper used in ReferenceHelper class

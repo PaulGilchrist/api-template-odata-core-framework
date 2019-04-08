@@ -54,11 +54,6 @@ namespace API.Classes {
                         };
                         var identity = new ClaimsIdentity(claims, Scheme.Name);
                         var roles = await _security.GetRoles(name);
-                        if (roles == null) {
-                            // Null means the identity was not found
-                            return AuthenticateResult.Fail("Forbidden");
-                        }
-                        // Blank string means the identity was found but has no special roles
                         foreach (var role in roles) {
                             identity.AddClaim(new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", role));
                         }

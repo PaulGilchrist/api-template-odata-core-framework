@@ -15,7 +15,7 @@ namespace API.Classes {
 
         public void Initialize(ITelemetry telemetry) {
             var requestTelemetry = telemetry as RequestTelemetry;
-            if (httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.Name != null) {
+            if (requestTelemetry != null && httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.Name != null) {
                 requestTelemetry.Context.User.Id = httpContextAccessor.HttpContext.User.Identity.Name;
             }
         }
