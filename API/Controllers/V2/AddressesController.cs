@@ -87,7 +87,6 @@ namespace API.Controllers.V2 {
                 }
                 var addresses = addressList.value;
                 foreach (Address address in addresses) {
-                    // If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
                     address.CreatedDate=DateTime.UtcNow;
                     address.CreatedBy=User.Identity.Name;
                     address.LastModifiedDate=DateTime.UtcNow;
@@ -97,8 +96,11 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return Created("", addresses);
             } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
+                    return Conflict("Entity already exists\nSee Application Insights Telemetry for full details");
+                } else {
+                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                }
             }
         }
 
@@ -247,9 +249,6 @@ namespace API.Controllers.V2 {
                     return NotFound();
                 }
                 var userId = Convert.ToInt32(ReferenceHelper.GetKeyFromUrl(reference.uri));
-                if (address.Users.Any(i => i.Id==userId)) {
-                    return StatusCode(409, string.Format("Conflict - The address with id {0} is already linked to the user with id {1}", id, userId));
-                }
                 User user = await _db.Users.FindAsync(userId);
                 if (user==null) {
                     return NotFound();
@@ -258,8 +257,11 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
+                    return Conflict("Association already exists\nSee Application Insights Telemetry for full details");
+                } else {
+                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                }
             }
         }
 

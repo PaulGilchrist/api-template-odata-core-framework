@@ -92,11 +92,6 @@ namespace API.Controllers.V2 {
                 }
                 var users = userList.value;
                 foreach (User user in users) {
-                    //// If anything else uniquely identifies a user, check for it here before allowing POST therby supporting idempotent POST (409 Conflict)
-                    //var dbUsers = _db.Users.Where(e => e.SSN==user.SSN);
-                    //if (await dbUsers.AnyAsync()) {
-                    //    return StatusCode(409 /* Conflict */, "User already exists with this SSN"); ; //
-                    //}
                     user.CreatedDate=DateTime.UtcNow;
                     user.CreatedBy=User.Identity.Name;
                     user.LastModifiedDate=DateTime.UtcNow;
@@ -106,8 +101,11 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return Created("", users);
             } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
+                    return Conflict("Entity already exists\nSee Application Insights Telemetry for full details");
+                } else {
+                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                }
             }
         }
 
@@ -261,9 +259,6 @@ namespace API.Controllers.V2 {
                     return NotFound();
                 }
                 var addressId = Convert.ToInt32(ReferenceHelper.GetKeyFromUrl(reference.uri));
-                if (user.Addresses.Any(i => i.Id==addressId)) {
-                    return StatusCode(409, string.Format("Conflict - The user with id {0} is already linked to the address with id {1}", id, addressId));
-                }
                 Address address = await _db.Addresses.FindAsync(addressId);
                 if (address==null) {
                     return NotFound();
@@ -272,8 +267,11 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
+                    return Conflict("Association already exists\nSee Application Insights Telemetry for full details");
+                } else {
+                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                }
             }
         }
 
