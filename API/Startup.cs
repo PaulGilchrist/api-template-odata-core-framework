@@ -127,6 +127,7 @@ namespace ODataCoreTemplate {
             var context = app.ApplicationServices.GetService<ApiDbContext>();
             MockData.AddMockData(context);
             //Add custom telemetry initializer to add user name from the HTTP context
+            app.CaptureRequest();
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseMvc(routes => {

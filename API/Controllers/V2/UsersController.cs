@@ -16,7 +16,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /*   
-*  Example on how to get an string[] of roles from the user's token 
+*  Example on how to get a string[] of roles from the user's token 
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
 */
 
@@ -38,18 +38,13 @@ namespace API.Controllers.V2 {
         [HttpGet]
         [ODataRoute("")]
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
-        [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery]
-        public async Task<IActionResult> Get() {
+        public IActionResult Get() {
             try {
-                var users = _db.Users;
-                if (!await users.AnyAsync()) {
-                    return NotFound();
-                }
-                return Ok(users);
+                return Ok(_db.Users);
             } catch(Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -60,16 +55,13 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(User), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)] // Not Found
         [EnableQuery]
-        public async Task<IActionResult> GetUser([FromRoute] int id) {
+        public IActionResult GetById([FromRoute] int id) {
             try {
-                var user = _db.Users.Where(e => e.Id==id);
-                if (!await user.AnyAsync()) {
-                    return NotFound();
-                }
-                return Ok(user);
-            } catch(Exception ex) {
+                //OData will handle returning 404 Not Found if IQueriable returns no result
+                return Ok(SingleResult.Create(_db.Users.Where(e => e.Id==id)));
+            } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -102,9 +94,9 @@ namespace API.Controllers.V2 {
                 return Created("", users);
             } catch (Exception ex) {
                 if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict("Entity already exists\nSee Application Insights Telemetry for full details");
+                    return Conflict(Constants.errorDupEntity+Constants.seeAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
                 }
             }
         }
@@ -161,7 +153,7 @@ namespace API.Controllers.V2 {
                 return Ok(dbUsers);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -197,7 +189,7 @@ namespace API.Controllers.V2 {
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -228,10 +220,10 @@ namespace API.Controllers.V2 {
                         entityEntry.State=EntityState.Unchanged;
                     }
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(409, "Conflict - Database foreign key constraints prevent this object from being deleted");
+                    return StatusCode(409, Constants.errorForeignKey+Constants.seeAppInsights);
                 } else {
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
                 }
             }
         }
@@ -268,9 +260,9 @@ namespace API.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict("Association already exists\nSee Application Insights Telemetry for full details");
+                    return Conflict(Constants.errorDupAssoc+Constants.seeAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
                 }
             }
         }
@@ -304,7 +296,7 @@ namespace API.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+Constants.seeAppInsights);
             }
         }
 
@@ -324,7 +316,7 @@ namespace API.Controllers.V2 {
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+Constants.seeAppInsights);
             }
         }
 
@@ -343,7 +335,7 @@ namespace API.Controllers.V2 {
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+Constants.seeAppInsights);
             }
         }
 

@@ -36,16 +36,12 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery]
-        public async Task<IActionResult> Get() {
+        public IActionResult Get() {
             try {
-                var addresses = _db.Addresses;
-                if (!await addresses.AnyAsync()) {
-                    return NotFound();
-                }
-                return Ok(addresses);
+                return Ok(_db.Addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -56,16 +52,13 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(User), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)] // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
-        public async Task<IActionResult> GetSingle([FromRoute] int id) {
+        public IActionResult GetById([FromRoute] int id) {
             try {
-                var address = _db.Addresses.Where(e => e.Id==id);
-                if (!await address.AnyAsync()) {
-                    return NotFound();
-                }
-                return Ok(address);
+                //OData will handle returning 404 Not Found if IQueriable returns no result
+                return Ok(SingleResult.Create(_db.Addresses.Where(e => e.Id==id)));
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -97,9 +90,9 @@ namespace API.Controllers.V2 {
                 return Created("", addresses);
             } catch (Exception ex) {
                 if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict("Entity already exists\nSee Application Insights Telemetry for full details");
+                    return Conflict(Constants.errorDupEntity+Constants.seeAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
                 }
             }
         }
@@ -152,7 +145,7 @@ namespace API.Controllers.V2 {
                 return Ok(dbAddresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -187,7 +180,7 @@ namespace API.Controllers.V2 {
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
 
@@ -218,10 +211,10 @@ namespace API.Controllers.V2 {
                         entityEntry.State=EntityState.Unchanged;
                     }
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(409, "Conflict - Database foreign key constraints prevent this object from being deleted");
+                    return StatusCode(409, Constants.errorForeignKey+Constants.seeAppInsights);
                 } else {
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
                 }
             }
         }
@@ -258,9 +251,9 @@ namespace API.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict("Association already exists\nSee Application Insights Telemetry for full details");
+                    return Conflict(Constants.errorDupAssoc+Constants.seeAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
                 }
             }
         }
@@ -294,7 +287,7 @@ namespace API.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+Constants.seeAppInsights);
             }
         }
 
@@ -314,7 +307,7 @@ namespace API.Controllers.V2 {
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+"\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message+Constants.seeAppInsights);
             }
         }
 
@@ -333,7 +326,7 @@ namespace API.Controllers.V2 {
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + "\nSee Application Insights Telemetry for full details");
+                return StatusCode(500, ex.Message + Constants.seeAppInsights);
             }
         }
  

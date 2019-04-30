@@ -7,16 +7,22 @@ using Microsoft.AspNetCore.Http;
 
 namespace API.Classes {
     public class TelemetryInitializer : ITelemetryInitializer {
-        IHttpContextAccessor httpContextAccessor;
+        private IHttpContextAccessor _httpContextAccessor;
 
         public TelemetryInitializer(IHttpContextAccessor httpContextAccessor) {
-            this.httpContextAccessor = httpContextAccessor;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public void Initialize(ITelemetry telemetry) {
-            var requestTelemetry = telemetry as RequestTelemetry;
-            if (requestTelemetry != null && httpContextAccessor.HttpContext != null && httpContextAccessor.HttpContext.User.Identity.Name != null) {
-                requestTelemetry.Context.User.Id = httpContextAccessor.HttpContext.User.Identity.Name;
+            RequestTelemetry requestTelemetry = telemetry as RequestTelemetry;
+            if (requestTelemetry != null && _httpContextAccessor.HttpContext != null) {
+                if (_httpContextAccessor.HttpContext.User.Identity.Name != null) {
+                    requestTelemetry.Context.User.Id = _httpContextAccessor.HttpContext.User.Identity.Name;
+                    requestTelemetry.Context.User.AuthenticatedUserId = _httpContextAccessor.HttpContext.User.Identity.Name;
+                }
+                if (_httpContextAccessor.HttpContext.Items.ContainsKey("RequestBody")) {
+                    requestTelemetry.Properties.Add("body", (string)_httpContextAccessor.HttpContext.Items["RequestBody"]);
+                }
             }
         }
     }
