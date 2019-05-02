@@ -41,7 +41,7 @@ namespace API.Controllers.V2 {
                 return Ok(_db.Addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -58,7 +58,7 @@ namespace API.Controllers.V2 {
                 return Ok(SingleResult.Create(_db.Addresses.Where(e => e.Id==id)));
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -69,7 +69,7 @@ namespace API.Controllers.V2 {
         /// <param name="addressList">An object containing an array of full address objects</param>
         [HttpPost]
         [ODataRoute("")]
-        [ProducesResponseType(typeof(User), 201)] // Created
+        [ProducesResponseType(typeof(Address), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         //[Authorize]
@@ -81,18 +81,18 @@ namespace API.Controllers.V2 {
                 var addresses = addressList.value;
                 foreach (Address address in addresses) {
                     address.CreatedDate=DateTime.UtcNow;
-                    address.CreatedBy=User.Identity.Name;
+                    address.CreatedBy=User.Identity.Name ?? "Anonymous";
                     address.LastModifiedDate=DateTime.UtcNow;
-                    address.LastModifiedBy=User.Identity.Name;
+                    address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Addresses.Add(address);
                 }
                 await _db.SaveChangesAsync();
                 return Created("", addresses);
             } catch (Exception ex) {
-                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict(Constants.errorDupEntity+Constants.seeAppInsights);
+                if (ex.InnerException.Message.Contains(Constants.errorSqlDuplicateKey)) {
+                    return Conflict(Constants.messageDupEntity+Constants.messageAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                    return StatusCode(500, ex.Message+Constants.messageAppInsights);
                 }
             }
         }
@@ -121,7 +121,7 @@ namespace API.Controllers.V2 {
                 List<Address> dbAddresses = new List<Address>(0);
                 System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
                 foreach (JObject patchAddress in patchAddresses) {
-                    var address = _db.Addresses.Find((int)patchAddress["id"]);
+                    var address = await _db.Addresses.FindAsync((int)patchAddress["id"]);
                     if (address== null) {
                         return NotFound();
                     }
@@ -136,7 +136,7 @@ namespace API.Controllers.V2 {
                         }
                     }
                     address.LastModifiedDate=DateTime.UtcNow;
-                    address.LastModifiedBy=User.Identity.Name;
+                    address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Entry(address).State = EntityState.Detached;
                     _db.Addresses.Update(address);
                     dbAddresses.Add(address);
@@ -145,7 +145,7 @@ namespace API.Controllers.V2 {
                 return Ok(dbAddresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -156,7 +156,7 @@ namespace API.Controllers.V2 {
         /// <param name="addressList">An object containing an array of full address objects.  Every property will be updated except id.</param>
         [HttpPut]
         [ODataRoute("")]
-        [ProducesResponseType(typeof(User), 200)] // Ok
+        [ProducesResponseType(typeof(Address), 200)] // Ok
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
@@ -173,14 +173,14 @@ namespace API.Controllers.V2 {
                         return NotFound();
                     }
                     address.LastModifiedDate=DateTime.UtcNow;
-                    address.LastModifiedBy=User.Identity.Name;
+                    address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Addresses.Update(address);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -205,16 +205,16 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                if (ex.InnerException.InnerException.Message.Contains(Constants.deleteForeignKey)) {
+                if (ex.InnerException.InnerException.Message.Contains(Constants.errorSqlReferenceConflict)) {
                     // Reset the remove    
                     foreach (EntityEntry entityEntry in _db.ChangeTracker.Entries().Where(e => e.State==EntityState.Deleted)) {
                         entityEntry.State=EntityState.Unchanged;
                     }
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(409, Constants.errorForeignKey+Constants.seeAppInsights);
+                    return StatusCode(409, Constants.messageerrorSqlForeignKey+Constants.messageAppInsights);
                 } else {
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                    return StatusCode(500, ex.Message+Constants.messageAppInsights);
                 }
             }
         }
@@ -250,10 +250,10 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict(Constants.errorDupAssoc+Constants.seeAppInsights);
+                if (ex.InnerException.Message.Contains(Constants.errorSqlDuplicateKey)) {
+                    return Conflict(Constants.messageDupAssoc+Constants.messageAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                    return StatusCode(500, ex.Message+Constants.messageAppInsights);
                 }
             }
         }
@@ -287,7 +287,7 @@ namespace API.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                return StatusCode(500, ex.Message+Constants.messageAppInsights);
             }
         }
 
@@ -307,7 +307,7 @@ namespace API.Controllers.V2 {
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                return StatusCode(500, ex.Message+Constants.messageAppInsights);
             }
         }
 
@@ -326,7 +326,7 @@ namespace API.Controllers.V2 {
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
  

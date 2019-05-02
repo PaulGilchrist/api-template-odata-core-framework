@@ -23,8 +23,8 @@ namespace API.Models {
         [Key]
         public int Id { get; set; }
 
-        [Display(Name = "First Name")]
         [Required]
+        [Display(Name = "First Name")]
         [StringLength(50, MinimumLength=2, ErrorMessage="Must be between 2 and 50 characters")]
         public string FirstName { get; set; }
 
@@ -32,8 +32,8 @@ namespace API.Models {
         [StringLength(50, MinimumLength=1, ErrorMessage="Must be between 1 and 50 characters")]
         public string MiddleName { get; set; }
 
-        [Display(Name = "Last Name")]
         [Required]
+        [Display(Name = "Last Name")]
         [StringLength(50, MinimumLength=2, ErrorMessage="Must be between 2 and 50 characters")]
         public string LastName { get; set; }
 
@@ -42,10 +42,6 @@ namespace API.Models {
 
         [StringLength(20, MinimumLength=7)]
         public string Phone { get; set; }
-
-        public List<Address> Addresses { get; set; } = new List<Address>();
-
-        public List<UserNote> Notes { get; set; } = new List<UserNote>();
 
         [Required]
         public System.DateTime CreatedDate { get; set; }
@@ -60,6 +56,12 @@ namespace API.Models {
         [Required]
         [StringLength(50, MinimumLength = 1, ErrorMessage = "LastModifiedBy must be between 1 and 50 characters")]
         public string LastModifiedBy { get; set; }
+
+        public List<Address> Addresses { get; set; } = new List<Address>();
+
+        public List<UserNote> Notes { get; set; } = new List<UserNote>();
+
+
     }
 
 

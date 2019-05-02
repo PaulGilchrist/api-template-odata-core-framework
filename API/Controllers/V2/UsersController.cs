@@ -44,7 +44,7 @@ namespace API.Controllers.V2 {
                 return Ok(_db.Users);
             } catch(Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -61,7 +61,7 @@ namespace API.Controllers.V2 {
                 return Ok(SingleResult.Create(_db.Users.Where(e => e.Id==id)));
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -85,18 +85,18 @@ namespace API.Controllers.V2 {
                 var users = userList.value;
                 foreach (User user in users) {
                     user.CreatedDate=DateTime.UtcNow;
-                    user.CreatedBy=User.Identity.Name;
+                    user.CreatedBy=User.Identity.Name ?? "Anonymous";
                     user.LastModifiedDate=DateTime.UtcNow;
-                    user.LastModifiedBy=User.Identity.Name;
+                    user.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Users.Add(user);
                 }
                 await _db.SaveChangesAsync();
                 return Created("", users);
             } catch (Exception ex) {
-                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict(Constants.errorDupEntity+Constants.seeAppInsights);
+                if (ex.InnerException.Message.Contains(Constants.errorSqlDuplicateKey)) {
+                    return Conflict(Constants.messageDupEntity+Constants.messageAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                    return StatusCode(500, ex.Message+Constants.messageAppInsights);
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace API.Controllers.V2 {
                 List<User> dbUsers = new List<User>(0);
                 System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
                 foreach (JObject patchUser in patchUsers) {
-                    var user = _db.Users.Find((int)patchUser["id"]);
+                    var user = await _db.Users.FindAsync((int)patchUser["id"]);
                     if (user== null) {
                         return NotFound();
                     }
@@ -144,7 +144,7 @@ namespace API.Controllers.V2 {
                         }
                     }
                     user.LastModifiedDate=DateTime.UtcNow;
-                    user.LastModifiedBy=User.Identity.Name;
+                    user.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Entry(user).State = EntityState.Detached;
                     _db.Users.Update(user);
                     dbUsers.Add(user);
@@ -153,7 +153,7 @@ namespace API.Controllers.V2 {
                 return Ok(dbUsers);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -182,14 +182,14 @@ namespace API.Controllers.V2 {
                     }
                     _db.Entry(dbUser).State = EntityState.Detached;
                     dbUser.LastModifiedDate=DateTime.UtcNow;
-                    dbUser.LastModifiedBy=User.Identity.Name;
+                    dbUser.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Users.Update(user);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.seeAppInsights);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
             }
         }
 
@@ -214,16 +214,16 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                if (ex.InnerException.InnerException.Message.Contains(Constants.deleteForeignKey)) {
+                if (ex.InnerException.InnerException.Message.Contains(Constants.errorSqlReferenceConflict)) {
                     // Reset the remove    
                     foreach (EntityEntry entityEntry in _db.ChangeTracker.Entries().Where(e => e.State==EntityState.Deleted)) {
                         entityEntry.State=EntityState.Unchanged;
                     }
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(409, Constants.errorForeignKey+Constants.seeAppInsights);
+                    return StatusCode(409, Constants.messageerrorSqlForeignKey+Constants.messageAppInsights);
                 } else {
                     _telemetryTracker.TrackException(ex);
-                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                    return StatusCode(500, ex.Message+Constants.messageAppInsights);
                 }
             }
         }
@@ -259,10 +259,10 @@ namespace API.Controllers.V2 {
                 await _db.SaveChangesAsync();
                 return NoContent();
             } catch (Exception ex) {
-                if (ex.InnerException.Message.Contains(Constants.dupKey)) {
-                    return Conflict(Constants.errorDupAssoc+Constants.seeAppInsights);
+                if (ex.InnerException.Message.Contains(Constants.errorSqlDuplicateKey)) {
+                    return Conflict(Constants.messageDupAssoc+Constants.messageAppInsights);
                 } else {
-                    return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                    return StatusCode(500, ex.Message+Constants.messageAppInsights);
                 }
             }
         }
@@ -296,7 +296,7 @@ namespace API.Controllers.V2 {
                 return NoContent();
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                return StatusCode(500, ex.Message+Constants.messageAppInsights);
             }
         }
 
@@ -316,7 +316,7 @@ namespace API.Controllers.V2 {
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                return StatusCode(500, ex.Message+Constants.messageAppInsights);
             }
         }
 
@@ -335,13 +335,12 @@ namespace API.Controllers.V2 {
                 return Ok(notes);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message+Constants.seeAppInsights);
+                return StatusCode(500, ex.Message+Constants.messageAppInsights);
             }
         }
 
     }
 
     #endregion
-
 
 }
