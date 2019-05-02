@@ -46,8 +46,8 @@ namespace ODataCoreTemplate {
             //var connectionString = Configuration.GetValue<string>("Sql:ConnectionString");
             //var maxRetryCount = Configuration.GetValue<int>("Sql:MaxRetryCount");
             //var maxRetryDelay = Configuration.GetValue<int>("Sql:MaxRetryDelay");
-            //var poolSize = Configuration.GetValue<int>("Sql:PoolSize");
-            //services.AddDbContextPool<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), poolSize);
+            //var maxPoolSize = Configuration.GetValue<int>("Sql:MaxPoolSize");
+            //services.AddDbContextPool<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), maxPoolSize);
 
             services.AddMemoryCache();
             services.AddSingleton<Security>();
