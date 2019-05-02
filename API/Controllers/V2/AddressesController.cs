@@ -137,7 +137,7 @@ namespace API.Controllers.V2 {
                     }
                     address.LastModifiedDate=DateTime.UtcNow;
                     address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    _db.Entry(address).State = EntityState.Detached;
+                    //_db.Entry(address).State = EntityState.Detached;
                     _db.Addresses.Update(address);
                     dbAddresses.Add(address);
                 }

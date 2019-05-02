@@ -41,13 +41,13 @@ namespace ODataCoreTemplate {
         public void ConfigureServices(IServiceCollection services) {
             // To make this demo simpler, we can use a memory only database populated with mock data
             services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
-            // For this demo we are using an in-memory database, but later we will connect to an actual database
-            // https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/new-db
 
+            // For this demo we are using an in-memory database, but later we will connect to an actual database
             //var connectionString = Configuration.GetValue<string>("Sql:ConnectionString");
             //var maxRetryCount = Configuration.GetValue<int>("Sql:MaxRetryCount");
             //var maxRetryDelay = Configuration.GetValue<int>("Sql:MaxRetryDelay");
-            //services.AddDbContext<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), ServiceLifetime.Singleton);
+            //var poolSize = Configuration.GetValue<int>("Sql:PoolSize");
+            //services.AddDbContextPool<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), poolSize);
 
             services.AddMemoryCache();
             services.AddSingleton<Security>();
@@ -113,6 +113,7 @@ namespace ODataCoreTemplate {
         /// </summary>
         /// <param name="app">The current application builder.</param>
         /// <param name="env">The current hosting environment.</param>
+        /// <param name="httpContextAccessor">Allows access to the HTTP context including request/response</param>
         /// <param name="modelBuilder">The <see cref="VersionedODataModelBuilder">model builder</see> used to create OData entity data models (EDMs).</param>
         /// <param name="provider">The API version descriptor provider used to enumerate defined API versions.</param>
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IHttpContextAccessor httpContextAccessor, VersionedODataModelBuilder modelBuilder, IApiVersionDescriptionProvider provider) {

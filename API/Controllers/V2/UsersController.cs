@@ -145,7 +145,7 @@ namespace API.Controllers.V2 {
                     }
                     user.LastModifiedDate=DateTime.UtcNow;
                     user.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    _db.Entry(user).State = EntityState.Detached;
+                    //_db.Entry(user).State = EntityState.Detached;
                     _db.Users.Update(user);
                     dbUsers.Add(user);
                 }
