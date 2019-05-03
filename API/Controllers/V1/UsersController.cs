@@ -41,7 +41,7 @@ namespace API.Controllers.V1 {
         [EnableQuery]
         public IActionResult Get() {
             try {
-                return Ok(_db.Users);
+                return Ok(_db.Users.AsNoTracking());
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
                 return StatusCode(500, ex.Message + Constants.messageAppInsights);
@@ -58,7 +58,7 @@ namespace API.Controllers.V1 {
         public IActionResult GetById([FromRoute] int id) {
             try {
                 //OData will handle returning 404 Not Found if IQueriable returns no result
-                return Ok(SingleResult.Create(_db.Users.Where(e => e.Id==id)));
+                return Ok(SingleResult.Create(_db.Users.Where(e => e.Id==id).AsNoTracking()));
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
                 return StatusCode(500, ex.Message + Constants.messageAppInsights);
