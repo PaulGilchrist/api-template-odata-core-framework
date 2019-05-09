@@ -145,6 +145,10 @@ namespace ODataCoreTemplate {
                         $"/swagger/{description.GroupName}/swagger.json",
                         description.GroupName.ToUpperInvariant());
                 }
+                options.DefaultModelExpandDepth(2);
+                options.DefaultModelsExpandDepth(-1);
+                options.DefaultModelRendering(ModelRendering.Model);
+                options.DisplayRequestDuration();
                 options.DocExpansion(DocExpansion.None);
             });
         }
