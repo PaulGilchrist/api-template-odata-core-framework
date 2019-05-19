@@ -3,10 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace API.Models {
 
-    public class AddressList {
-        public List<Address> value { get; set; }
-    }
-
     public class AddressNote {
         [Key]
         public int Id { get; set; }
@@ -66,17 +62,13 @@ namespace API.Models {
 
         public List<User> Users { get; set; } = new List<User>();
 
-        [Required]
         public System.DateTime CreatedDate { get; set; }
 
-        [Required]
         [StringLength(50, MinimumLength = 1, ErrorMessage = "CreatedBy must be between 1 and 50 characters")]
         public string CreatedBy { get; set; }
 
-        [Required]
         public System.DateTime LastModifiedDate { get; set; }
 
-        [Required]
         [StringLength(50, MinimumLength = 1, ErrorMessage = "LastModifiedBy must be between 1 and 50 characters")]
         public string LastModifiedBy { get; set; }
 

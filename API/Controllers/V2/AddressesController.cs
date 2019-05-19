@@ -62,32 +62,56 @@ namespace API.Controllers.V2 {
             }
         }
 
-        /// <summary>Create one or more new address</summary>
+        /// <summary>Create a new address</summary>
         /// <remarks>
+        /// Supports either a single object or an array
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="addressList">An object containing an array of full address objects</param>
+        /// <param name="address">A full address object</param>
         [HttpPost]
         [ODataRoute("")]
-        [ProducesResponseType(typeof(Address), 201)] // Created
+        [ProducesResponseType(typeof(IEnumerable<Address>), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[Authorize]
-        public async Task<IActionResult> Post([FromBody] AddressList addressList) {
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Post([FromBody] Address address) {
             try {
-                if (!ModelState.IsValid) {
-                    return BadRequest(ModelState);
+                Request.Body.Position = 0;
+                var streamReader = (await new StreamReader(Request.Body).ReadToEndAsync()).Trim();
+                // Determine if a single object or an array was passed in
+                if (streamReader.StartsWith("{")) {
+                    var node = JsonConvert.DeserializeObject<Address>(streamReader);
+                    node.CreatedDate=DateTime.UtcNow;
+                    node.CreatedBy=User.Identity.Name ?? "Anonymous";
+                    node.LastModifiedDate=DateTime.UtcNow;
+                    node.LastModifiedBy=User.Identity.Name ?? "Anonymous";
+                    ModelState.Clear();
+                    TryValidateModel(node);
+                    if (!ModelState.IsValid) {
+                        return BadRequest(ModelState);
+                    }
+                    _db.Addresses.Add(node);
+                    await _db.SaveChangesAsync();
+                    return Created("", node);
+                } else if (streamReader.StartsWith("[")) {
+                    var nodes = JsonConvert.DeserializeObject<IEnumerable<Address>>(streamReader);
+                    foreach (var node in nodes) {
+                        node.CreatedDate=DateTime.UtcNow;
+                        node.CreatedBy=User.Identity.Name ?? "Anonymous";
+                        node.LastModifiedDate=DateTime.UtcNow;
+                        node.LastModifiedBy=User.Identity.Name ?? "Anonymous";
+                        ModelState.Clear();
+                        TryValidateModel(node);
+                        if (!ModelState.IsValid) {
+                            return BadRequest(ModelState);
+                        }
+                        _db.Addresses.Add(node);
+                    }
+                    await _db.SaveChangesAsync();
+                    return Created("", nodes);
+                } else {
+                    return BadRequest();
                 }
-                var addresses = addressList.value;
-                foreach (Address address in addresses) {
-                    address.CreatedDate=DateTime.UtcNow;
-                    address.CreatedBy=User.Identity.Name ?? "Anonymous";
-                    address.LastModifiedDate=DateTime.UtcNow;
-                    address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    _db.Addresses.Add(address);
-                }
-                await _db.SaveChangesAsync();
-                return Created("", addresses);
             } catch (Exception ex) {
                 if (ex.InnerException.Message.Contains(Constants.errorSqlDuplicateKey)) {
                     return Conflict(Constants.messageDupEntity+Constants.messageAppInsights);
@@ -97,36 +121,63 @@ namespace API.Controllers.V2 {
             }
         }
 
+        /// <summary>Edit address</summary>
+        /// <remarks>
+        /// Make sure to secure this action before production release
+        /// </remarks>
+        /// <param name="id">The address id</param>
+        /// <param name="addressDelta">A partial address object.  Only properties supplied will be updated.</param>
+        [HttpPatch]
+        [ODataRoute("({id})")]
+        [ProducesResponseType(typeof(Address), 200)] // Ok
+        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
+        [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
+        [ProducesResponseType(typeof(void), 404)] // Not Found
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] Delta<Address> addressDelta) {
+            try {
+                var address = await _db.Addresses.FindAsync(id);
+                if (address==null) {
+                    return NotFound();
+                }
+                address.LastModifiedDate=DateTime.UtcNow;
+                address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
+                addressDelta.Patch(address);
+                await _db.SaveChangesAsync();
+                return Ok(address);
+            } catch (Exception ex) {
+                _telemetryTracker.TrackException(ex);
+                return StatusCode(500, ex.Message + Constants.messageAppInsights);
+            }
+        }
+
         /// <summary>Bulk edit addresses</summary>
         /// <remarks>
         /// Make sure to secure this action before production release
         /// </remarks>
-        /// <param name="addressList">An object containing an array of partial address objects.
-        /// </param>
+        /// <param name="addressDeltas">An array of partial address objects.  Only properties supplied will be updated.</param>
         [HttpPatch]
         [ODataRoute("")]
         [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
+        [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
-        public async Task<IActionResult> Patch([FromBody] AddressList addressList) {
-            // Swagger will document a UserList object model, but what is actually being passed in is a dynamic list since PATCH does not require the full object properties
-            //     This mean we actually need a DynamicList, so reposition and re-read the body
-            //     Full explaination ... https://github.com/PaulGilchrist/documents/blob/master/articles/api/api-odata-bulk-updates.md
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PatchBulk([FromBody] IEnumerable<Address> addressDeltas) {
             try {
                 Request.Body.Position = 0;
-                var patchAddressList = JsonConvert.DeserializeObject<DynamicList>(new StreamReader(Request.Body).ReadToEnd());
-                var patchAddresses = patchAddressList.value;
-                List<Address> dbAddresses = new List<Address>(0);
+                var patchAddresses = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(await new StreamReader(Request.Body).ReadToEndAsync());
+                List<Address> addresses = new List<Address>(0);
                 System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
-                foreach (JObject patchAddress in patchAddresses) {
+                foreach (var patchAddress in patchAddresses) {
                     var address = await _db.Addresses.FindAsync((int)patchAddress["id"]);
                     if (address== null) {
                         return NotFound();
                     }
                     var patchAddressProperties = patchAddress.Properties();
-                    // Loop through the changed properties updating the address object
+                    // Loop through the changed properties updating the object
                     foreach (var patchAddressProperty in patchAddressProperties) {
                         foreach (var addressProperty in addressProperties) {
                             if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
@@ -137,44 +188,9 @@ namespace API.Controllers.V2 {
                     }
                     address.LastModifiedDate=DateTime.UtcNow;
                     address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    //_db.Entry(address).State = EntityState.Detached;
+                    //_db.Entry(user).State = EntityState.Detached;
                     _db.Addresses.Update(address);
-                    dbAddresses.Add(address);
-                }
-                await _db.SaveChangesAsync();
-                return Ok(dbAddresses);
-            } catch (Exception ex) {
-                _telemetryTracker.TrackException(ex);
-                return StatusCode(500, ex.Message + Constants.messageAppInsights);
-            }
-        }
-
-        /// <summary>Replace all data for an array of addresses</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
-        /// <param name="addressList">An object containing an array of full address objects.  Every property will be updated except id.</param>
-        [HttpPut]
-        [ODataRoute("")]
-        [ProducesResponseType(typeof(Address), 200)] // Ok
-        [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize]
-        public async Task<IActionResult> Put([FromBody] AddressList addressList) {
-            try {
-                var addresses = addressList.value;
-                foreach (Address address in addresses) {
-                    if (!ModelState.IsValid) {
-                        return BadRequest(ModelState);
-                    }
-                    Address dbAddress = await _db.Addresses.FindAsync(address.Id);
-                    if (dbAddress == null) {
-                        return NotFound();
-                    }
-                    address.LastModifiedDate=DateTime.UtcNow;
-                    address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    _db.Addresses.Update(address);
+                    addresses.Add(address);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(addresses);

@@ -88,7 +88,11 @@ namespace ODataCoreTemplate {
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(options => {
                 // add a custom operation filter which sets default values
-                options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
+
+
+                //options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
+
+
                 // integrate xml comments
                 options.IncludeXmlComments(XmlCommentsFilePath);
                 options.DescribeAllEnumsAsStrings();
