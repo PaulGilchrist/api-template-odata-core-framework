@@ -17,7 +17,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers.V1 {
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {
         private ApiDbContext _db;

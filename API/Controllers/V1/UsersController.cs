@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 */
 
 namespace API.Controllers.V1 {
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
         private ApiDbContext _db;
