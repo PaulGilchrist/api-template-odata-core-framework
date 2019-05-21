@@ -40,6 +40,9 @@
             if (description.ApiVersion.MajorVersion<2 ) {
                 info.Description = "This API version has been deprecated.  Please use version V2";
             }
+            if (description.ApiVersion.MajorVersion > 2) {
+                info.Description = "This API version is in preview.  Please use version V2 for production applications";
+            }
             return info;
         }
     }
