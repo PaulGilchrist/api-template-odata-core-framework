@@ -87,14 +87,9 @@ namespace ODataCoreTemplate {
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(options => {
-                // add a custom operation filter which sets default values
-
-
-                //options.CustomSchemaIds((x) => x.Name + "_" + Guid.NewGuid());
-
-
-                // integrate xml comments
                 options.IncludeXmlComments(XmlCommentsFilePath);
+                //Configure Swagger to filter out $expand objects to improve performance for large highly relational APIs
+                options.SchemaFilter<SwaggerIgnoreFilter>();
                 options.DescribeAllEnumsAsStrings();
                 options.AddSecurityDefinition("Basic", new ApiKeyScheme() { In = "header", Description = "Please insert Basic token into field", Name = "Authorization", Type = "apiKey" });
                 options.OperationFilter<SwaggerDefaultValues>();
