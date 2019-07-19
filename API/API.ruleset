@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="SonarQube - api-template-odata-core-framework Sonar way" ToolsVersion="16.0">
+  <Include Path="..\.sonarlint\api-template-odata-core-frameworkcsharp.ruleset" Action="Default" />
+</RuleSet>

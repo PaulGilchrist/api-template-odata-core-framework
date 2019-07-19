@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+#pragma warning disable S125 // Sections of code should not be commented out
 /*   
 *  Example on how to get a string[] of roles from the user's token 
 *      var roles = User.Claims.Where(c => c.Type == ClaimsIdentity.DefaultRoleClaimType).FirstOrDefault().Value.Split(',');
@@ -23,8 +24,8 @@ namespace API.Controllers.V2 {
     [ApiVersion("2.0")]
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
-        private ApiDbContext _db;
-        private TelemetryTracker _telemetryTracker;
+        private readonly ApiDbContext _db;
+        private readonly TelemetryTracker _telemetryTracker;
 
         public UsersController(ApiDbContext context, TelemetryTracker telemetryTracker) {
             _db = context;
@@ -194,7 +195,6 @@ namespace API.Controllers.V2 {
                     }
                     user.LastModifiedDate=DateTime.UtcNow;
                     user.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    //_db.Entry(user).State = EntityState.Detached;
                     _db.Users.Update(user);
                     users.Add(user);
                 }
