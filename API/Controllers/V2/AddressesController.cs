@@ -168,10 +168,17 @@ namespace API.Controllers.V2 {
             try {
                 Request.Body.Position = 0;
                 var patchAddresses = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(await new StreamReader(Request.Body).ReadToEndAsync());
-                List<Address> addresses = new List<Address>(0);
                 System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
+                // Get list of all passed in Ids
+                var idList = new List<int>();
                 foreach (var patchAddress in patchAddresses) {
-                    var address = await _db.Addresses.FindAsync((int)patchAddress["id"]);
+                    idList.Add((int)patchAddress["id"]);
+                }
+                // Make one SQL call to get all the database objects to Patch
+                var addresses = await _db.Addresses.Where(st => idList.Contains(st.Id)).ToListAsync();
+                // Update each database objects
+                foreach (var patchAddress in patchAddresses) {
+                    var address = addresses.FirstOrDefault(st => st.Id == (int)patchAddress["id"]);
                     if (address== null) {
                         return NotFound();
                     }
@@ -187,9 +194,7 @@ namespace API.Controllers.V2 {
                     }
                     address.LastModifiedDate=DateTime.UtcNow;
                     address.LastModifiedBy=User.Identity.Name ?? "Anonymous";
-                    //_db.Entry(user).State = EntityState.Detached;
                     _db.Addresses.Update(address);
-                    addresses.Add(address);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(addresses);

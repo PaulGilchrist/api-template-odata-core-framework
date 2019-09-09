@@ -172,10 +172,17 @@ namespace API.Controllers.V2 {
             try {
                 Request.Body.Position = 0;
                 var patchUsers = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(await new StreamReader(Request.Body).ReadToEndAsync());
-                List<User> users = new List<User>(0);
                 System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
+                // Get list of all passed in Ids
+                var idList = new List<int>();
                 foreach (var patchUser in patchUsers) {
-                    var user = await _db.Users.FindAsync((int)patchUser["id"]);
+                    idList.Add((int)patchUser["id"]);
+                }
+                // Make one SQL call to get all the database objects to Patch
+                var users = await _db.Users.Where(st => idList.Contains(st.Id)).ToListAsync();
+                // Update each database objects
+                foreach (var patchUser in patchUsers) {
+                    var user = users.FirstOrDefault(st => st.Id == (int)patchUser["id"]);
                     if (user== null) {
                         return NotFound();
                     }
@@ -196,7 +203,6 @@ namespace API.Controllers.V2 {
                     user.LastModifiedDate=DateTime.UtcNow;
                     user.LastModifiedBy=User.Identity.Name ?? "Anonymous";
                     _db.Users.Update(user);
-                    users.Add(user);
                 }
                 await _db.SaveChangesAsync();
                 return Ok(users);
