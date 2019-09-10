@@ -178,6 +178,7 @@ namespace API.Controllers.V2 {
                 foreach (var patchUser in patchUsers) {
                     idList.Add((int)patchUser["id"]);
                 }
+                _db.ChangeTracker.AutoDetectChangesEnabled = false;
                 // Make one SQL call to get all the database objects to Patch
                 var users = await _db.Users.Where(st => idList.Contains(st.Id)).ToListAsync();
                 // Update each database objects
@@ -193,6 +194,7 @@ namespace API.Controllers.V2 {
                             for (int i = 0; i < userProperties.Length; i++) {
                                 if (String.Equals(patchUserPropertyName, userProperties[i].Name, StringComparison.OrdinalIgnoreCase) == 0) {
                                     _db.Entry(user).Property(userProperties[i].Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperties[i].PropertyType);
+                                    _db.Entry(scheduleTask).State = EntityState.Modified;
                                     break;
                                     // Could optionally even support deltas within deltas here
                                 }
@@ -204,6 +206,7 @@ namespace API.Controllers.V2 {
                     _db.Users.Update(user);
                 }
                 await _db.SaveChangesAsync();
+                _db.ChangeTracker.AutoDetectChangesEnabled = true;
                 return Ok(users);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);

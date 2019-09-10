@@ -174,6 +174,7 @@ namespace API.Controllers.V2 {
                 foreach (var patchAddress in patchAddresses) {
                     idList.Add((int)patchAddress["id"]);
                 }
+                _db.ChangeTracker.AutoDetectChangesEnabled = false;
                 // Make one SQL call to get all the database objects to Patch
                 var addresses = await _db.Addresses.Where(st => idList.Contains(st.Id)).ToListAsync();
                 // Update each database objects
@@ -189,6 +190,7 @@ namespace API.Controllers.V2 {
                             for (int i = 0; i < addressProperties.Length; i++) {
                                 if (String.Equals(patchAddressPropertyName, addressProperties[i].Name, StringComparison.OrdinalIgnoreCase)) {
                                     _db.Entry(address).Property(addressProperties[i].Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperties[i].PropertyType);
+                                    _db.Entry(scheduleTask).State = EntityState.Modified;
                                     break;
                                     // Could optionally even support deltas within deltas here
                                 }
@@ -200,6 +202,7 @@ namespace API.Controllers.V2 {
                     _db.Addresses.Update(address);
                 }
                 await _db.SaveChangesAsync();
+                _db.ChangeTracker.AutoDetectChangesEnabled = true;
                 return Ok(addresses);
             } catch (Exception ex) {
                 _telemetryTracker.TrackException(ex);
