@@ -76,7 +76,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[Authorize(Roles = "Admin")]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> Post([FromBody] User user) {
             try {
                 Request.Body.Position = 0;
@@ -137,7 +137,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
         [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize(Roles = "Admin")]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] Delta<User> userDelta) {
             try {
                 var user = await _db.Users.FindAsync(id);
@@ -167,7 +167,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
         [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize(Roles = "Admin")]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> PatchBulk([FromBody] IEnumerable<User> userDeltas) {
             try {
                 Request.Body.Position = 0;
@@ -222,7 +222,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize(Roles = "Admin")]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> Delete([FromRoute] int id) {
             try {
                 User user = await _db.Users.FindAsync(id);
@@ -262,7 +262,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize(Roles = "Admin")]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> PostAddressRef([FromRoute] int id, [FromBody] ODataReference reference) {
             try {
                 User user = await _db.Users.FindAsync(id);
@@ -297,7 +297,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
-        //[Authorize(Roles = "Admin")]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> DeleteAddressRef([FromRoute] int userId, [FromQuery] Uri id) {
             // This meets the spec, but so does having Uri in [FromBody] so it does not have to use the variable "id" I would prefer to use instead of userId
             try {

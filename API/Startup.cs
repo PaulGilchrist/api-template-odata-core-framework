@@ -60,16 +60,15 @@ namespace ODataCoreTemplate {
             });
             services.AddMemoryCache();
             services.AddSingleton<Security>();
-            // Configure OAuth Authentication
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                // Configure OAuth Authentication
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
                    options.TokenValidationParameters = new TokenValidationParameters {
                        ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(',')
                    };
-               });
-            // Configure Basic Authentication
-            services.AddAuthentication("BasicAuthentication")
+               })
+                // Configure Basic Authentication
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
             services.AddMvc(options => options.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
                 .AddJsonOptions(options => {
