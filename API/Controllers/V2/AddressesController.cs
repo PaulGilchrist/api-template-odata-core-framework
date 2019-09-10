@@ -182,12 +182,12 @@ namespace API.Controllers.V2 {
                     if (address== null) {
                         return NotFound();
                     }
-                    var patchAddressProperties = patchAddress.Properties();
                     // Loop through the changed properties updating the object
-                    foreach (var patchAddressProperty in patchAddressProperties) {
+                    foreach (var patchAddressProperty in patchAddress.Properties()) {
                         foreach (var addressProperty in addressProperties) {
                             if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
                                 _db.Entry(address).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
+                                break;
                                 // Could optionally even support deltas within deltas here
                             }
                         }

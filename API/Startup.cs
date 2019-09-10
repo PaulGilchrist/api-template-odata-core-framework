@@ -48,7 +48,16 @@ namespace ODataCoreTemplate {
             //var maxRetryDelay = Configuration.GetValue<int>("Sql:MaxRetryDelay");
             //var maxPoolSize = Configuration.GetValue<int>("Sql:MaxPoolSize");
             //services.AddDbContextPool<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), maxPoolSize);
-
+            // CORS support
+            services.AddCors(options => {
+                options.AddPolicy("AllOrigins",
+                     builder => {
+                         builder
+                     .AllowAnyOrigin()
+                     .AllowAnyMethod()
+                     .AllowAnyHeader();
+                     });
+            });
             services.AddMemoryCache();
             services.AddSingleton<Security>();
             // Configure OAuth Authentication
@@ -119,6 +128,7 @@ namespace ODataCoreTemplate {
             } else {
                 app.UseHsts();
             }
+            app.UseCors("AllOrigins");
             app.UseHttpsRedirection();
             app.UseAuthentication();
             //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)

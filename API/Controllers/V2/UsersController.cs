@@ -186,9 +186,8 @@ namespace API.Controllers.V2 {
                     if (user== null) {
                         return NotFound();
                     }
-                    var patchUserProperties = patchUser.Properties();
                     // Loop through the changed properties updating the object
-                    foreach (var patchUserProperty in patchUserProperties) {
+                    foreach (var patchUserProperty in patchUser.Properties()) {
                         // Example of column level security with appropriate description if forbidden
                         if ((String.Compare(patchUserProperty.Name, "Email", true)==0) && !Security.HasRole(User, "Admin")) {
                             return StatusCode(403, new ForbiddenException { SecuredColumn="email", RoleRequired="Admin", Description="Modification to property 'email' requires role 'Admin'" });
@@ -196,6 +195,7 @@ namespace API.Controllers.V2 {
                         foreach (var userProperty in userProperties) {
                             if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
                                 _db.Entry(user).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
+                                break;
                                 // Could optionally even support deltas within deltas here
                             }
                         }
