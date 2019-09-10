@@ -168,7 +168,7 @@ namespace API.Controllers.V2 {
             try {
                 Request.Body.Position = 0;
                 var patchAddresses = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(await new StreamReader(Request.Body).ReadToEndAsync());
-                System.Reflection.PropertyInfo[] addressProperties = typeof(Address).GetProperties();
+                var addressProperties = typeof(Address).GetProperties();
                 // Get list of all passed in Ids
                 var idList = new List<int>();
                 foreach (var patchAddress in patchAddresses) {
@@ -184,11 +184,14 @@ namespace API.Controllers.V2 {
                     }
                     // Loop through the changed properties updating the object
                     foreach (var patchAddressProperty in patchAddress.Properties()) {
-                        foreach (var addressProperty in addressProperties) {
-                            if (String.Compare(patchAddressProperty.Name, addressProperty.Name, true) == 0) {
-                                _db.Entry(address).Property(addressProperty.Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperty.PropertyType);
-                                break;
-                                // Could optionally even support deltas within deltas here
+                        var patchAddressPropertyName = patchAddressProperty.Name;
+                        if (patchAddressPropertyName != "id") { // Cannot change the id but it will always be passed in
+                            for (int i = 0; i < addressProperties.Length; i++) {
+                                if (String.Equals(patchAddressPropertyName, addressProperties[i].Name, StringComparison.OrdinalIgnoreCase)) {
+                                    _db.Entry(address).Property(addressProperties[i].Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperties[i].PropertyType);
+                                    break;
+                                    // Could optionally even support deltas within deltas here
+                                }
                             }
                         }
                     }

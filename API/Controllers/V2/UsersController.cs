@@ -172,7 +172,7 @@ namespace API.Controllers.V2 {
             try {
                 Request.Body.Position = 0;
                 var patchUsers = JsonConvert.DeserializeObject<IEnumerable<dynamic>>(await new StreamReader(Request.Body).ReadToEndAsync());
-                System.Reflection.PropertyInfo[] userProperties = typeof(User).GetProperties();
+                var userProperties = typeof(User).GetProperties();
                 // Get list of all passed in Ids
                 var idList = new List<int>();
                 foreach (var patchUser in patchUsers) {
@@ -186,17 +186,16 @@ namespace API.Controllers.V2 {
                     if (user== null) {
                         return NotFound();
                     }
-                    // Loop through the changed properties updating the object
                     foreach (var patchUserProperty in patchUser.Properties()) {
-                        // Example of column level security with appropriate description if forbidden
-                        if ((String.Compare(patchUserProperty.Name, "Email", true)==0) && !Security.HasRole(User, "Admin")) {
-                            return StatusCode(403, new ForbiddenException { SecuredColumn="email", RoleRequired="Admin", Description="Modification to property 'email' requires role 'Admin'" });
-                        }
-                        foreach (var userProperty in userProperties) {
-                            if (String.Compare(patchUserProperty.Name, userProperty.Name, true) == 0) {
-                                _db.Entry(user).Property(userProperty.Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperty.PropertyType);
-                                break;
-                                // Could optionally even support deltas within deltas here
+                        var patchUserPropertyName = patchUserProperty.Name;
+                        if (patchUserPropertyName != "id") { // Cannot change the id but it will always be passed in
+                            // Loop through the changed properties updating the object
+                            for (int i = 0; i < userProperties.Length; i++) {
+                                if (String.Equals(patchUserPropertyName, userProperties[i].Name, StringComparison.OrdinalIgnoreCase) == 0) {
+                                    _db.Entry(user).Property(userProperties[i].Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperties[i].PropertyType);
+                                    break;
+                                    // Could optionally even support deltas within deltas here
+                                }
                             }
                         }
                     }
