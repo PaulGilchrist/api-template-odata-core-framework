@@ -2,6 +2,8 @@
 
 namespace API.Models {
     public class ClaimRoles {
+        public ClaimRoles() { }
+ 
         [Key]
         [Required]
         [Display(Name = "Name")]

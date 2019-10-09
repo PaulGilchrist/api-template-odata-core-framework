@@ -190,7 +190,7 @@ namespace API.Controllers.V2 {
                             for (int i = 0; i < addressProperties.Length; i++) {
                                 if (String.Equals(patchAddressPropertyName, addressProperties[i].Name, StringComparison.OrdinalIgnoreCase)) {
                                     _db.Entry(address).Property(addressProperties[i].Name).CurrentValue = Convert.ChangeType(patchAddressProperty.Value, addressProperties[i].PropertyType);
-                                    _db.Entry(scheduleTask).State = EntityState.Modified;
+                                    _db.Entry(address).State = EntityState.Modified;
                                     break;
                                     // Could optionally even support deltas within deltas here
                                 }

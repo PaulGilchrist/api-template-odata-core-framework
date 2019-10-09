@@ -12,7 +12,6 @@ namespace API.Configuration {
         public DbSet<ClaimRoles> ClaimRoles { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserNote> UserNotes { get; set; }
-        public object Markets { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             modelBuilder.Entity<Address>(entity => {

@@ -4,6 +4,9 @@ using System.ComponentModel.DataAnnotations;
 namespace API.Models {
 
     public class AddressNote {
+
+        public AddressNote() {}
+    
         [Key]
         public int Id { get; set; }
 
@@ -16,6 +19,8 @@ namespace API.Models {
     }
 
     public class Address {
+        public Address() { }
+
         public enum AddressType {
             Residential,
             Business
