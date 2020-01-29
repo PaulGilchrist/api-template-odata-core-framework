@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 namespace API.Models {
 
     public class UserNote {
+        public UserNote() {}
+
         [Key]
         public int Id { get; set; }
 
@@ -16,6 +18,8 @@ namespace API.Models {
     }
 
     public class User {
+        public User() { }
+
         [Key]
         public int Id { get; set; }
 
