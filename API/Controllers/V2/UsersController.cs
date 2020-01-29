@@ -183,7 +183,7 @@ namespace API.Controllers.V2 {
                 var users = await _db.Users.Where(st => idList.Contains(st.Id)).ToListAsync();
                 // Update each database objects
                 foreach (var patchUser in patchUsers) {
-                    var user = users.FirstOrDefault(st => st.Id == (int)patchUser["id"]);
+                    var user = users.Find(st => st.Id == (int)patchUser["id"]);
                     if (user== null) {
                         return NotFound();
                     }
@@ -194,7 +194,7 @@ namespace API.Controllers.V2 {
                             for (int i = 0; i < userProperties.Length; i++) {
                                 if (String.Equals(patchUserPropertyName, userProperties[i].Name, StringComparison.OrdinalIgnoreCase) == 0) {
                                     _db.Entry(user).Property(userProperties[i].Name).CurrentValue = Convert.ChangeType(patchUserProperty.Value, userProperties[i].PropertyType);
-                                    _db.Entry(scheduleTask).State = EntityState.Modified;
+                                    _db.Entry(user).State = EntityState.Modified;
                                     break;
                                     // Could optionally even support deltas within deltas here
                                 }

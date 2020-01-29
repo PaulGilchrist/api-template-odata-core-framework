@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,6 +80,7 @@ namespace ODataCoreTemplate {
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
             services.AddApiVersioning(options => {
+                //options.ApiVersionReader = new QueryStringApiVersionReader();
                 options.ReportApiVersions = true;
                 // required when adding versioning to and existing API to allow existing non-versioned queries to succeed (not error with no version specified)
                 options.AssumeDefaultVersionWhenUnspecified = true;
