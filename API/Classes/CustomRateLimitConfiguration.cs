@@ -43,21 +43,26 @@ namespace API.Classes {
         }
 
         string IClientResolveContributor.ResolveClient() {
-            if (_httpContextAccessor.HttpContext.Request.Headers.TryGetValue(_clientOptions.ClientIdHeader, out var values)) {
-                var clientId = values.First();
-                if (_clientPolicies.ClientRules.FirstOrDefault(r => r.ClientId.Equals(clientId, StringComparison.OrdinalIgnoreCase)) == null) {
-                    // The exact clientId was not found in ClientRateLimitPolicies so we will not modify the clientId to generalize the auth type
-                    if (clientId.StartsWith("basic", StringComparison.OrdinalIgnoreCase)) {
-                        // Basic authorization header(applications) will use the clientId rules pooling all users of that application together
-                        clientId = "basic";
-                    } else if (clientId.StartsWith("bearer", StringComparison.OrdinalIgnoreCase)) {
-                        // Bearer authorization header(individual user) will use the clientId rules much stricter than for an entire application
-                        clientId = "bearer";
-                    }
+            if (!_clientOptions.ClientIdHeader.Equals("Authorization", StringComparison.OrdinalIgnoreCase) && _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(_clientOptions.ClientIdHeader, out var headerValues)) {
+                // The requestor is using a header other than "Authorization" so just return the clientId unchanged
+                return headerValues.First();
+            } else if (_httpContextAccessor.HttpContext.Request.Headers.TryGetValue("Authorization", out var authValues)) {
+                var clientId = authValues.First();
+                if (_clientPolicies.ClientRules.FirstOrDefault(r => r.ClientId.Equals(clientId, StringComparison.OrdinalIgnoreCase)) != null) {
+                    // Tere is a specific client policy rule set for for this "Authorization" client so just return the clientId unchanged
+                    return clientId;
+                } else if (clientId.StartsWith("basic", StringComparison.OrdinalIgnoreCase)) {
+                    // Basic authorization header(applications) will use the clientId rules pooling all users of that application together
+                    return "basic";
+                } else if (clientId.StartsWith("bearer", StringComparison.OrdinalIgnoreCase)) {
+                    // Bearer authorization header(individual user) will use the clientId rules much stricter than for an entire application
+                    return "bearer";
+                } else {
+                    // An authorization header existed, but it was not basic or bearer generalize to "unknown"
+                    return "unknown";
                 }
-                return clientId;
             } else {
-                // No ClientIdHeader was found so the user is anonymous and we will use the general rules
+                // No header was found so the user is anonymous and we will use the general rules
                 return "anon";
             }
         }
