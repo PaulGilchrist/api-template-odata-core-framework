@@ -28,7 +28,13 @@ namespace API.Classes {
             var clientId = "anon";
             if (_httpContextAccessor.HttpContext.Request.Headers.TryGetValue("Authorization", out var values)) {
                 clientId = values.First();
-                // Strip off the actual key or token
+                /*
+                * Strip off the actual key or token
+                * This does limit us to only 3 different client types
+                *   No authorization header (anonymous users) will use the general rules
+                *   Basic authorization header (applications) will use the clientId rules pooling all users of that application together
+                *   Bearer authorization header (individual user) will use the clientId rules much stricter than for an entire application
+                */
                 if (clientId != null && clientId.StartsWith("basic")) {
                     clientId = "basic";
                 } else if (clientId != null && clientId.StartsWith("bearer")) {

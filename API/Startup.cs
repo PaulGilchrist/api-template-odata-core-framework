@@ -121,13 +121,8 @@ namespace ODataCoreTemplate {
             });
             // The IHttpContextAccessor service is not registered by default.  The clientId/clientIp resolvers use it.  https://github.com/aspnet/Hosting/issues/793
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
-
             // configuration (resolvers, counter key builders)
-            //services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
             services.AddSingleton<IRateLimitConfiguration, CustomRateLimitConfiguration>();
-
-
             // Add support for GetUrlHelper used in ReferenceHelper class
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<IUrlHelper>(x => {
