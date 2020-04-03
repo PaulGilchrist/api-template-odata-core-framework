@@ -11,8 +11,8 @@ namespace API.Classes {
         }
 
         protected override void RegisterResolvers() {
-            //base.RegisterResolvers();
             ClientResolvers.Add(new AuthTypeResolveContributor(HttpContextAccessor));
+            // base.RegisterResolvers();
         }
     }
 
