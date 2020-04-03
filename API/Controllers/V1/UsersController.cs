@@ -18,11 +18,12 @@ using System.Threading.Tasks;
 */
 
 namespace API.Controllers.V1 {
+#pragma warning restore S125 // Sections of code should not be commented out
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("users")]
     public class UsersController : ODataController {
-        private ApiDbContext _db;
-        private TelemetryTracker _telemetryTracker;
+        private readonly ApiDbContext _db;
+        private readonly TelemetryTracker _telemetryTracker;
 
         public UsersController(ApiDbContext context, TelemetryTracker telemetryTracker) {
             _db = context;
