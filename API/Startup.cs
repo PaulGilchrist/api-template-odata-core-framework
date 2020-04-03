@@ -1,6 +1,7 @@
 ﻿using API.Classes;
 using API.Configuration;
 using API.Data;
+using AspNetCoreRateLimit;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -43,12 +44,14 @@ namespace ODataCoreTemplate {
             // To make this demo simpler, we can use a memory only database populated with mock data
             services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
 
-            // For this demo we are using an in-memory database, but later we will connect to an actual database
-            //var connectionString = Configuration.GetValue<string>("Sql:ConnectionString");
-            //var maxRetryCount = Configuration.GetValue<int>("Sql:MaxRetryCount");
-            //var maxRetryDelay = Configuration.GetValue<int>("Sql:MaxRetryDelay");
-            //var maxPoolSize = Configuration.GetValue<int>("Sql:MaxPoolSize");
-            //services.AddDbContextPool<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), maxPoolSize);
+            /* For this demo we are using an in-memory database, but later we will connect to an actual database
+            *   var connectionString = Configuration.GetValue<string>("Sql:ConnectionString");
+            *   var maxRetryCount = Configuration.GetValue<int>("Sql:MaxRetryCount");
+            *   var maxRetryDelay = Configuration.GetValue<int>("Sql:MaxRetryDelay");
+            *   var maxPoolSize = Configuration.GetValue<int>("Sql:MaxPoolSize");
+            *   services.AddDbContextPool<ApiDbContext>(options => options.UseSqlServer(connectionString, o => o.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(maxRetryDelay), null)), maxPoolSize);
+            */
+
             // CORS support
             services.AddCors(options => {
                 options.AddPolicy("AllOrigins",
@@ -59,18 +62,31 @@ namespace ODataCoreTemplate {
                      .AllowAnyHeader();
                      });
             });
-            services.AddMemoryCache();
+            // Add Security
             services.AddSingleton<Security>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                // Configure OAuth Authentication
+               // Configure OAuth Authentication
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
-                   options.TokenValidationParameters = new TokenValidationParameters {
+                   options.TokenValidationParameters = new TokenValidationParameters
+                   {
                        ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(',')
                    };
                })
                 // Configure Basic Authentication
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
+
+            // Needed to load configuration from appsettings.json
+            services.AddOptions();
+            // Needed to store rate limit counters and ip rules
+            services.AddMemoryCache(); services.AddMemoryCache();
+            // Load general configuration from appsettings.json
+            services.Configure<ClientRateLimitOptions>(Configuration.GetSection("ClientRateLimiting"));
+            // Load client rules from appsettings.json
+            services.Configure<ClientRateLimitPolicies>(Configuration.GetSection("ClientRateLimitPolicies"));
+            // Inject counter and rules stores
+            services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
             services.AddMvc(options => options.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
                 .AddJsonOptions(options => {
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
@@ -103,7 +119,15 @@ namespace ODataCoreTemplate {
                 options.OperationFilter<SwaggerDefaultValues>();
                 options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> { { "Basic", Enumerable.Empty<string>() }, });
             });
-            services.AddHttpContextAccessor();
+            // The IHttpContextAccessor service is not registered by default.  The clientId/clientIp resolvers use it.  https://github.com/aspnet/Hosting/issues/793
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+
+            // configuration (resolvers, counter key builders)
+            //services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            services.AddSingleton<IRateLimitConfiguration, CustomRateLimitConfiguration>();
+
+
             // Add support for GetUrlHelper used in ReferenceHelper class
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<IUrlHelper>(x => {
@@ -112,7 +136,6 @@ namespace ODataCoreTemplate {
                 return factory.GetUrlHelper(actionContext);
             });
             services.AddSingleton<TelemetryTracker>();
-
         }
 
         /// <summary>
@@ -132,10 +155,11 @@ namespace ODataCoreTemplate {
             app.UseCors("AllOrigins");
             app.UseHttpsRedirection();
             app.UseAuthentication();
-            //Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
+            app.UseClientRateLimiting();
+            // Add mock data to the database if it is empty (demo uses in memory database only, so always starts empty)
             var context = app.ApplicationServices.GetService<ApiDbContext>();
             MockData.AddMockData(context);
-            //Add custom telemetry initializer to add user name from the HTTP context
+            // Add custom telemetry initializer to add user name from the HTTP context
             app.CaptureRequest();
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
@@ -165,7 +189,9 @@ namespace ODataCoreTemplate {
             get {
                 var basePath = PlatformServices.Default.Application.ApplicationBasePath;
                 var fileName = typeof(Startup).GetTypeInfo().Assembly.GetName().Name + ".xml";
+                #pragma warning disable SecurityIntelliSenseCS // MS Security rules violation
                 return Path.Combine(basePath, fileName);
+                #pragma warning restore SecurityIntelliSenseCS // MS Security rules violation
             }
         }
 
