@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using AspNetCoreRateLimit;
+﻿using AspNetCoreRateLimit;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
-namespace ODataCoreTemplate
-{
-    public class Program {
+namespace ODataCoreTemplate {
+    public static class Program {
         public static async Task Main(string[] args) {
             IWebHost webHost = CreateWebHostBuilder(args).Build();
             using (var scope = webHost.Services.CreateScope()) {

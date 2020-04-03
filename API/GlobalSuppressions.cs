@@ -5,3 +5,4 @@
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out", Justification = "<Pending>", Scope = "namespace", Target = "~N:API.Controllers.V1")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out", Justification = "<Pending>", Scope = "member", Target = "~M:ODataCoreTemplate.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out", Justification = "<Pending>", Scope = "member", Target = "~M:API.Classes.CustomRateLimitConfiguration.RegisterResolvers")]

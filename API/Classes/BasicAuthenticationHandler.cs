@@ -13,7 +13,7 @@ namespace API.Classes {
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions> {
 
         public IConfiguration Configuration { get; }
-        private Security _security;
+        private readonly Security _security;
 
         public BasicAuthenticationHandler(
                 IConfiguration configuration,
