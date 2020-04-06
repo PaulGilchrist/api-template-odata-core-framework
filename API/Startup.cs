@@ -3,8 +3,10 @@ using API.Configuration;
 using API.Data;
 using AspNetCoreRateLimit;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNet.OData.Batch;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNet.OData.Routing.Conventions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -21,7 +23,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OData;
+using Microsoft.OData.Edm;
 using Newtonsoft.Json;
+using Pulte.EDH.API.Classes;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
@@ -42,7 +47,7 @@ namespace ODataCoreTemplate {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             // To make this demo simpler, we can use a memory only database populated with mock data
-            services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), ServiceLifetime.Singleton);
+            services.AddDbContext<ApiDbContext>(opt => opt.UseInMemoryDatabase("ApiDb"), Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton);
 
             /* For this demo we are using an in-memory database, but later we will connect to an actual database
             *   var connectionString = Configuration.GetValue<string>("Sql:ConnectionString");
@@ -147,6 +152,7 @@ namespace ODataCoreTemplate {
             } else {
                 app.UseHsts();
             }
+            var httpRequestLoggingLevel = Configuration.GetValue<string>("ApplicationInsights:HttpRequestLoggingLevel");
             app.UseCors("AllOrigins");
             app.UseHttpsRedirection();
             app.UseAuthentication();
@@ -155,12 +161,33 @@ namespace ODataCoreTemplate {
             var context = app.ApplicationServices.GetService<ApiDbContext>();
             MockData.AddMockData(context);
             // Add custom telemetry initializer to add user name from the HTTP context
-            app.CaptureRequest();
+            app.UseMiddleware<CaptureRequestMiddleware>(httpRequestLoggingLevel);
             var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
             configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
+            app.UseODataBatching();
+            app.UseApiVersioning(); // added to fix issue outlined in https://github.com/OData/WebApi/issues/1754
             app.UseMvc(routes => {
                 routes.Count().Filter().OrderBy().Expand().Select().MaxTop(null);
                 routes.MapVersionedODataRoutes("ODataRoute", "odata", modelBuilder.GetEdmModels());
+                routes.MapODataServiceRoute("ODataBatch", null,
+                   configureAction: containerBuilder => containerBuilder
+                       .AddService(Microsoft.OData.ServiceLifetime.Singleton, typeof(IEdmModel),
+                           sp => modelBuilder.GetEdmModels().First())
+                       .AddService(Microsoft.OData.ServiceLifetime.Singleton, typeof(IEnumerable<IODataRoutingConvention>),
+                           sp => ODataRoutingConventions.CreateDefaultWithAttributeRouting("ODataBatch", routes))
+                       .AddService(Microsoft.OData.ServiceLifetime.Singleton, typeof(ODataBatchHandler),
+                           sp => {
+                               var oDataBatchHandler = new TransactionalODataBatchHandler();
+                               oDataBatchHandler.MessageQuotas.MaxOperationsPerChangeset = 5000;
+                               return oDataBatchHandler;
+                           })
+                        .AddService(Microsoft.OData.ServiceLifetime.Singleton, typeof(ODataMessageReaderSettings),
+                            sp => {
+                                ODataMessageReaderSettings odataMessageReaderSettings = new ODataMessageReaderSettings();
+                                odataMessageReaderSettings.MessageQuotas.MaxOperationsPerChangeset = 5000;
+                                return odataMessageReaderSettings;
+                            })
+                );
                 routes.EnableDependencyInjection();
             });
             // Enable middleware to serve generated Swagger as a JSON endpoint.
