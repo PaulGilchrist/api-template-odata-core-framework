@@ -106,6 +106,8 @@ namespace ODataCoreTemplate {
                 // required when adding versioning to and existing API to allow existing non-versioned queries to succeed (not error with no version specified)
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.DefaultApiVersion = ApiVersions.V2;
+                // Needed to fix issue #1754 - https://github.com/OData/WebApi/issues/1754
+                options.RegisterMiddleware = false;
            });
             services.AddOData().EnableApiVersioning();
             services.AddODataApiExplorer(options => {
