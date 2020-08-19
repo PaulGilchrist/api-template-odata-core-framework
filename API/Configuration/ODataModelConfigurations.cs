@@ -16,10 +16,10 @@ namespace API.Configuration {
             builder.Namespace = "ApiTemplate";
             builder.ContainerName = "ApiTemplateContainer";
             // Called once for each apiVersion, so this is the best place to define the EntiitySet differences from version to version
-            var user = builder.EntitySet<User>("users").EntityType;
+            var user = builder.EntitySet<User>("Users").EntityType;
             user.Count().Expand(5).Filter().OrderBy().Page(null,100).Select();
 
-            var address = builder.EntitySet<Address>("addresses").EntityType;
+            var address = builder.EntitySet<Address>("Addresses").EntityType;
             address.Count().Expand(5).Filter().OrderBy().Page(null, 100).Select();
 
             //Example of how we can remove a field in the data model that may still exist in the database, supporting zero downtime deployments
