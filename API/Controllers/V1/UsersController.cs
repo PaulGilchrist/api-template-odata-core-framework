@@ -21,6 +21,7 @@ namespace API.Controllers.V1 {
 #pragma warning restore S125 // Sections of code should not be commented out
     /// <summary>
     /// Represents a RESTful service of users
+    /// IMPORTANT - [Produces("application/json")] is required on every HTTP action or Swagger will not show what object model will be returned
     /// </summary>
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("users")]

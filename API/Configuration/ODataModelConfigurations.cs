@@ -16,6 +16,7 @@ namespace API.Configuration {
             builder.Namespace = "ApiTemplate";
             builder.ContainerName = "ApiTemplateContainer";
             // Called once for each apiVersion, so this is the best place to define the EntiitySet differences from version to version
+            // IMPORTANT - The entity set name is case sensitive and must match the controller name or the POST properties will not show as coming [FromBody] but rather from the (query) in Swagger
             var user = builder.EntitySet<User>("Users").EntityType;
             user.Count().Expand(5).Filter().OrderBy().Page(null,100).Select();
 

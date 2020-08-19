@@ -6,19 +6,19 @@ using System.ComponentModel.DataAnnotations;
 namespace API.Models {
 
     /// <summary>
-    /// Represents a user specific note.
+    /// Represents a user specific note
     /// </summary>
     [Select]
     public class UserNote {
         public UserNote() {}
 
         /// <summary>
-        /// Gets or sets the addressNote identifier.
+        /// Gets or sets the addressNote identifier
         /// </summary>        [Key]
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the user realted to this note.
+        /// Gets or sets the user realted to this note
         /// </summary>
         /// <value>The user.</value>
         [Required]
@@ -27,26 +27,27 @@ namespace API.Models {
         /// <summary>
         /// Gets or sets the note.
         /// </summary>
-        /// <value>The note.</value>        [Required]
+        /// <value>The note.</value>
+        [Required]
         [StringLength(1024)]
         public string Note { get; set; }
     }
 
     /// <summary>
-    /// Represents an address.
+    /// Represents a user
     /// </summary>
     [Select]
     public class User {
         public User() { }
 
         /// <summary>
-        /// Gets or sets the user identifier.
+        /// Gets or sets the user identifier
         /// </summary>
         [Key]
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the user's first name.
+        /// Gets or sets the user's first name
         /// </summary>
         /// <value>The user's first name.</value>
         [Required]
@@ -55,7 +56,7 @@ namespace API.Models {
         public string FirstName { get; set; }
 
         /// <summary>
-        /// Gets or sets the user's middle name or initial.
+        /// Gets or sets the user's middle name or initial
         /// </summary>
         /// <value>The user's middle name or initial.</value>
         [Display(Name = "Middle Name")]
@@ -63,7 +64,7 @@ namespace API.Models {
         public string MiddleName { get; set; }
 
         /// <summary>
-        /// Gets or sets the user's last name.
+        /// Gets or sets the user's last name
         /// </summary>
         /// <value>The user's last name.</value>
         [Required]
@@ -72,14 +73,14 @@ namespace API.Models {
         public string LastName { get; set; }
 
         /// <summary>
-        /// Gets or sets the user's email address.
+        /// Gets or sets the user's email address
         /// </summary>
         /// <value>The user's email address.</value>
         [StringLength(150, MinimumLength=3)]
         public string Email { get; set; }
 
         /// <summary>
-        /// Gets or sets the user's primary phone number.
+        /// Gets or sets the user's primary phone number
         /// </summary>
         /// <value>The user's primary phone number.</value>
         [StringLength(20, MinimumLength=7)]
@@ -112,14 +113,14 @@ namespace API.Models {
         public string LastModifiedBy { get; set; }
 
         /// <summary>
-        /// Gets a list of addresses for this user.
+        /// Gets a list of addresses for this user
         /// </summary>
         /// <value>The <see cref="IList{T}">list</see> of <see cref="Address">addresses</see>.</value>
         [Contained]
         public List<Address> Addresses { get; set; } = new List<Address>();
 
         /// <summary>
-        /// Gets a list of notes for this user.
+        /// Gets a list of notes for this user
         /// </summary>
         /// <value>The <see cref="IList{T}">list</see> of <see cref="UserNote">notes</see>.</value>
         [Contained]

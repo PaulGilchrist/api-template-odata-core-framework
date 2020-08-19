@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 namespace API.Controllers.V2 {
     /// <summary>
     /// Represents a RESTful service of users
+    /// IMPORTANT - [Produces("application/json")] is required on every HTTP action or Swagger will not show what object model will be returned
     /// </summary>
     [ApiVersion("2.0")]
     [ODataRoutePrefix("users")]

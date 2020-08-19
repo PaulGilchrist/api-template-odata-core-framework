@@ -9,18 +9,18 @@ namespace API.Models {
     public class AddressNote {
 
         /// <summary>
-        /// Represents an address specific note.
+        /// Represents an address specific note
         /// </summary>
         public AddressNote() {}
 
         /// <summary>
-        /// Gets or sets the addressNote identifier.
+        /// Gets or sets the addressNote identifier
         /// </summary>
         [Key]
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the address realted to this note.
+        /// Gets or sets the address realted to this note
         /// </summary>
         /// <value>The address.</value>
         [Required]
@@ -36,7 +36,7 @@ namespace API.Models {
     }
 
     /// <summary>
-    /// Represents an address.
+    /// Represents an address
     /// </summary>
     [Select]
     public class Address {
@@ -48,13 +48,13 @@ namespace API.Models {
         }
 
         /// <summary>
-        /// Gets or sets the address identifier.
+        /// Gets or sets the address identifier
         /// </summary>
         [Key]
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the street number.
+        /// Gets or sets the street number
         /// </summary>
         /// <value>The street number.</value>
         [Range(0, 99999)]
@@ -63,7 +63,7 @@ namespace API.Models {
         public int StreetNumber { get; set; }
 
         /// <summary>
-        /// Gets or sets the street name.
+        /// Gets or sets the street name
         /// </summary>
         /// <value>The street name.</value>
         [Display(Name = "Street Name")]
@@ -72,7 +72,7 @@ namespace API.Models {
         public string StreetName { get; set; }
 
         /// <summary>
-        /// Gets or sets the optional second line for street name.
+        /// Gets or sets the optional second line for street name
         /// </summary>
         /// <value>The street name's second line.</value>
         [Display(Name = "Street Name Line 2")]
@@ -80,7 +80,7 @@ namespace API.Models {
         public string StreetName2 { get; set; }
 
         /// <summary>
-        /// Gets or sets the city.
+        /// Gets or sets the city
         /// </summary>
         /// <value>The city.</value>
         [Required]
@@ -88,7 +88,7 @@ namespace API.Models {
         public string City { get; set; }
 
         /// <summary>
-        /// Gets or sets the state.
+        /// Gets or sets the state
         /// </summary>
         /// <value>The state.</value>
         [Required]
@@ -96,7 +96,7 @@ namespace API.Models {
         public string State { get; set; }
 
         /// <summary>
-        /// Gets or sets the postal zip code.
+        /// Gets or sets the postal zip code
         /// </summary>
         /// <value>The postal zip code.</value>
         [Display(Name = "Zip Code")]
@@ -105,20 +105,20 @@ namespace API.Models {
         public string ZipCode { get; set; }
 
         /// <summary>
-        /// Gets or sets address location name.
+        /// Gets or sets address location name
         /// </summary>
         /// <value>The address location name.</value>
         [StringLength(50, MinimumLength=2, ErrorMessage="Must be between 2 and 50 characters")]
         public string Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the type of address.
+        /// Gets or sets the type of address
         /// </summary>
         /// <value>The address type.</value>
         public AddressType? Type { get; set; }
 
         /// <summary>
-        /// Gets or sets the suite.
+        /// Gets or sets the suite
         /// </summary>
         /// <value>The suite.</value>
         [StringLength(20, MinimumLength=1, ErrorMessage="Must be between 1 and 20 characters")]

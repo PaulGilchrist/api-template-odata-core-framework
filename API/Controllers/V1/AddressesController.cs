@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 namespace API.Controllers.V1 {
     /// <summary>
     /// Represents a RESTful service of addresses
+    /// IMPORTANT - [Produces("application/json")] is required on every HTTP action or Swagger will not show what object model will be returned
     /// </summary>
     [ApiVersion("1.0", Deprecated = true)]
     [ODataRoutePrefix("addresses")]
