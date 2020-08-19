@@ -121,8 +121,9 @@ namespace ODataCoreTemplate {
                 //Configure Swagger to filter out $expand objects to improve performance for large highly relational APIs
                 options.SchemaFilter<SwaggerIgnoreFilter>();
                 //options.DescribeAllEnumsAsStrings();
-                options.AddSecurityDefinition("Basic", new OpenApiSecurityScheme() { In = ParameterLocation.Header, Description = "Please insert Basic token into field", Name = "Authorization", Type = SecuritySchemeType.ApiKey });
                 options.OperationFilter<SwaggerDefaultValues>();
+                // The following two options are only needed is using "Basic" security
+                options.AddSecurityDefinition("Basic", new OpenApiSecurityScheme() { In = ParameterLocation.Header, Description = "Please insert Basic token into field", Name = "Authorization", Type = SecuritySchemeType.ApiKey });
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement {
                     {
                         new OpenApiSecurityScheme
@@ -175,6 +176,8 @@ namespace ODataCoreTemplate {
             var context = app.ApplicationServices.GetService<ApiDbContext>();
             MockData.AddMockData(context);
             // Add custom telemetry initializer to add user name from the HTTP context
+            var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
+            configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseMiddleware<CaptureRequestMiddleware>(httpRequestLoggingLevel);
             app.UseODataBatching();
             app.UseApiVersioning(); // added to fix issue outlined in https://github.com/OData/WebApi/issues/1754
@@ -223,9 +226,7 @@ namespace ODataCoreTemplate {
             get {
                 var basePath = PlatformServices.Default.Application.ApplicationBasePath;
                 var fileName = typeof(Startup).GetTypeInfo().Assembly.GetName().Name + ".xml";
-                #pragma warning disable SecurityIntelliSenseCS // MS Security rules violation
                 return Path.Combine(basePath, fileName);
-                #pragma warning restore SecurityIntelliSenseCS // MS Security rules violation
             }
         }
 

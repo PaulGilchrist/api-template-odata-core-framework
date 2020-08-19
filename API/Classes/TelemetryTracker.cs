@@ -19,6 +19,11 @@ namespace API.Classes {
             _telemetryClient.TrackException(ex, properties, measurements);
         }
 
+        public void TrackTrace(string Message) {
+            // Send the exception telemetry:
+            _telemetryClient.TrackTrace(Message);
+        }
+
     }
 
 }
