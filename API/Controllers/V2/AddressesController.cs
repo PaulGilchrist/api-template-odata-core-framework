@@ -16,11 +16,14 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace API.Controllers.V2 {
+    /// <summary>
+    /// Represents a RESTful service of addresses
+    /// </summary>
     [ApiVersion("2.0")]
     [ODataRoutePrefix("addresses")]
     public class AddressesController : ODataController {
-        private ApiDbContext _db;
-        private TelemetryTracker _telemetryTracker;
+        private readonly ApiDbContext _db;
+        private readonly TelemetryTracker _telemetryTracker;
 
         public AddressesController(ApiDbContext context, TelemetryTracker telemetryTracker) {
             _db = context;
@@ -30,10 +33,12 @@ namespace API.Controllers.V2 {
         #region CRUD Operations
 
         /// <summary>Query addresses</summary>
+        /// <returns>A list of addresses</returns>
+        /// <response code="200">The addresses were successfully retrieved</response>
         [HttpGet]
         [ODataRoute("")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
-        [ProducesResponseType(typeof(void), 404)]  // Not Found
         [EnableQuery]
         public IActionResult Get() {
             try {
@@ -46,8 +51,12 @@ namespace API.Controllers.V2 {
 
         /// <summary>Query addresses by id</summary>
         /// <param name="id">The address id</param>
+        /// <returns>A single address</returns>
+        /// <response code="200">The address was successfully retrieved</response>
+        /// <response code="404">The address was not found</response>
         [HttpGet]
         [ODataRoute("({id})")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(User), 200)] // Ok
         [ProducesResponseType(typeof(void), 404)] // Not Found
         [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select | AllowedQueryOptions.Expand)]
@@ -64,14 +73,20 @@ namespace API.Controllers.V2 {
         /// <summary>Create a new address</summary>
         /// <remarks>
         /// Supports either a single object or an array
-        /// Make sure to secure this action before production release
         /// </remarks>
         /// <param name="address">A full address object</param>
+        /// <returns>A new address or list of addresses</returns>
+        /// <response code="201">The address was successfully created</response>
+        /// <response code="400">The address is invalid</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">Access denied due to inadaquate claim roles</response>
         [HttpPost]
         [ODataRoute("")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(IEnumerable<Address>), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
+        [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> Post([FromBody] Address address) {
             try {
@@ -121,18 +136,22 @@ namespace API.Controllers.V2 {
         }
 
         /// <summary>Edit address</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
         /// <param name="id">The address id</param>
         /// <param name="addressDelta">A partial address object.  Only properties supplied will be updated.</param>
+        /// <returns>An updated address</returns>
+        /// <response code="200">The address was successfully updated</response>
+        /// <response code="400">The address is invalid</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">Access denied due to inadaquate claim roles</response>
+        /// <response code="404">The address was not found</response>
         [HttpPatch]
         [ODataRoute("({id})")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(Address), 200)] // Ok
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
         [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
-        [ProducesResponseType(typeof(void), 404)] // Not Found
+        [ProducesResponseType(typeof(void), 404)]
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> Patch([FromRoute] int id, [FromBody] Delta<Address> addressDelta) {
             try {
@@ -152,12 +171,16 @@ namespace API.Controllers.V2 {
         }
 
         /// <summary>Bulk edit addresses</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
         /// <param name="addressDeltas">An array of partial address objects.  Only properties supplied will be updated.</param>
+        /// <returns>An updated list of addresses</returns>
+        /// <response code="200">The address was successfully updated</response>
+        /// <response code="400">The address is invalid</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">Access denied due to inadaquate claim roles</response>
+        /// <response code="404">The address was not found</response>
         [HttpPatch]
         [ODataRoute("")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(IEnumerable<Address>), 200)] // Ok
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
@@ -211,14 +234,17 @@ namespace API.Controllers.V2 {
         }
 
         /// <summary>Delete the given address</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
         /// <param name="id">The address id</param>
+        /// <response code="204">The address was successfully deleted</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">Access denied due to inadaquate claim roles</response>
+        /// <response code="404">The address was not found</response>
         [HttpDelete]
         [ODataRoute("({id})")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(void), 204)] // No Content
-        [ProducesResponseType(typeof(void), 401)] // Unauthorized
+        [ProducesResponseType(typeof(void), 401)] // Unauthorized - User not authenticated
+        [ProducesResponseType(typeof(ForbiddenException), 403)] // Forbidden - User does not have required claim roles
         [ProducesResponseType(typeof(void), 404)] // Not Found
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> Delete([FromRoute] int id) {
@@ -250,11 +276,12 @@ namespace API.Controllers.V2 {
         #region REFs
 
         /// <summary>Associate a user to the address with the given id</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
         /// <param name="id">The address id</param>
         /// <param name="reference">The Uri of the user being associated.  Ex: {"@odata.id":"http://api.company.com/odata/users(1)"}</param>
+        /// <response code="204">The user was successfully associated</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">Access denied due to inadaquate claim roles</response>
+        /// <response code="404">The user or address was not found</response>
         [HttpPost]
         [ODataRoute("({id})/users/$ref")]
         [ProducesResponseType(typeof(void), 204)] // No Content
@@ -285,16 +312,19 @@ namespace API.Controllers.V2 {
         }
 
         /// <summary>Remove a user association from the address with the given id</summary>
-        /// <remarks>
-        /// Make sure to secure this action before production release
-        /// </remarks>
         /// <param name="addressId">The address id</param>
         /// <param name="id">The Uri of the user association being removed.  Ex: id=http://api.company.com/odata/users(1)</param>
+        /// <response code="204">The user association was successfully removed</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">Access denied due to inadaquate claim roles</response>
+        /// <response code="404">The user association was not found</response>
+        /// <response code="409">SQL Conflict</response>
         [HttpDelete]
         [ODataRoute("({addressId})/users/$ref")]
         [ProducesResponseType(typeof(void), 204)] // No Content
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
         [ProducesResponseType(typeof(void), 404)] // Not Found
+        [ProducesResponseType(typeof(string), 409)] // Conflict
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
         public async Task<IActionResult> DeleteUserRef([FromRoute] int addressId, [FromQuery] Uri id) {
             // This meets the spec, but so does having Uri in [FromBody] so it does not have to use the variable "id" I would prefer to use instead of addressId
@@ -319,6 +349,8 @@ namespace API.Controllers.V2 {
 
         /// <summary>Get the users for the address with the given id</summary>
         /// <param name="id">The address id</param>
+        /// <returns>A list of users</returns>
+        /// <response code="200">The users were successfully retrieved</response>
         [HttpGet]
         [ODataRoute("({id})/users")]
         [ProducesResponseType(typeof(IEnumerable<User>), 200)] // Ok
@@ -338,6 +370,9 @@ namespace API.Controllers.V2 {
         }
 
         /// <summary>Query address notes</summary>
+        /// <param name="id">The address id</param>
+        /// <returns>A list of notes</returns>
+        /// <response code="200">The notes were successfully retrieved</response>
         [HttpGet]
         [ODataRoute("({id})/notes")]
         [ProducesResponseType(typeof(IEnumerable<AddressNote>), 200)] // Ok

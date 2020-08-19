@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,9 +24,8 @@ using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OData;
 using Microsoft.OData.Edm;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
-using Pulte.EDH.API.Classes;
-using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
@@ -93,9 +91,10 @@ namespace ODataCoreTemplate {
             services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
             services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
             services.AddMvc(options => options.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
-                .AddJsonOptions(options => {
+                .AddNewtonsoftJson(options => {
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    options.SerializerSettings.Formatting = Formatting.None;
                     options.SerializerSettings.PreserveReferencesHandling=PreserveReferencesHandling.None;
                     options.SerializerSettings.NullValueHandling=NullValueHandling.Ignore;
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -122,9 +121,21 @@ namespace ODataCoreTemplate {
                 //Configure Swagger to filter out $expand objects to improve performance for large highly relational APIs
                 options.SchemaFilter<SwaggerIgnoreFilter>();
                 options.DescribeAllEnumsAsStrings();
-                options.AddSecurityDefinition("Basic", new ApiKeyScheme() { In = "header", Description = "Please insert Basic token into field", Name = "Authorization", Type = "apiKey" });
+                options.AddSecurityDefinition("Basic", new OpenApiSecurityScheme() { In = ParameterLocation.Header, Description = "Please insert Basic token into field", Name = "Authorization", Type = SecuritySchemeType.ApiKey });
                 options.OperationFilter<SwaggerDefaultValues>();
-                options.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> { { "Basic", Enumerable.Empty<string>() }, });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Basic"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
             // The IHttpContextAccessor service is not registered by default.  The clientId/clientIp resolvers use it.  https://github.com/aspnet/Hosting/issues/793
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -137,6 +148,7 @@ namespace ODataCoreTemplate {
                 var factory = x.GetRequiredService<IUrlHelperFactory>();
                 return factory.GetUrlHelper(actionContext);
             });
+            services.AddSwaggerGenNewtonsoftSupport();
             services.AddSingleton<TelemetryTracker>();
         }
 
@@ -164,8 +176,6 @@ namespace ODataCoreTemplate {
             MockData.AddMockData(context);
             // Add custom telemetry initializer to add user name from the HTTP context
             app.UseMiddleware<CaptureRequestMiddleware>(httpRequestLoggingLevel);
-            var configuration = app.ApplicationServices.GetService<TelemetryConfiguration>();
-            configuration.TelemetryInitializers.Add(new TelemetryInitializer(httpContextAccessor));
             app.UseODataBatching();
             app.UseApiVersioning(); // added to fix issue outlined in https://github.com/OData/WebApi/issues/1754
             app.UseMvc(routes => {

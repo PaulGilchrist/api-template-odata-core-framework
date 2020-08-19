@@ -4,11 +4,11 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pulte.EDH.API.Classes {
+namespace API.Classes {
     public class CaptureRequestMiddleware {
         private readonly RequestDelegate _next;
         private readonly string _loggingLevel;
-        private TelemetryTracker _telemetryTracker;
+        private readonly TelemetryTracker _telemetryTracker;
 
         public CaptureRequestMiddleware(RequestDelegate next, string loggingLevel, TelemetryTracker telemetryTracker) {
             _loggingLevel = loggingLevel;

@@ -2,8 +2,9 @@
     using Microsoft.AspNetCore.Mvc.ApiExplorer;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
-    using Swashbuckle.AspNetCore.Swagger;
+    using Microsoft.OpenApi.Models;
     using Swashbuckle.AspNetCore.SwaggerGen;
+    using System;
 
     /// <summary>
     /// Configures the Swagger generation options.
@@ -28,14 +29,13 @@
             }
         }
 
-        static Info CreateInfoForApiVersion(ApiVersionDescription description) {
-            var info = new Info() {
+        static OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description) {
+            var info = new OpenApiInfo() {
                 Title = "OData, Open API, .Net Core demo and training API",
                 Version = description.ApiVersion.ToString(),
                 Description = "OData, Open API, .Net Core demo and training API",
-                Contact = new Contact() { Name = "Paul Gilchrist", Email = "paul.gilchrist@outlook.com" },
-                TermsOfService = "Shareware",
-                License = new License() { Name = "MIT", Url = "https://opensource.org/licenses/MIT" }
+                Contact = new OpenApiContact() { Name = "Paul Gilchrist", Email = "paul.gilchrist@outlook.com" },
+                License = new OpenApiLicense() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
             };
             if (description.ApiVersion.MajorVersion<2 ) {
                 info.Description = "This API version has been deprecated.  Please use version V2";

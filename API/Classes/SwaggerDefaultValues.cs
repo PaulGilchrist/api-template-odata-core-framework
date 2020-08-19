@@ -1,30 +1,34 @@
-﻿using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Swashbuckle.AspNetCore.Swagger;
+﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Linq;
-using static Microsoft.AspNetCore.Mvc.Versioning.ApiVersionMapping;
 
 namespace API.Classes {
     /// <summary>
     /// Represents the Swagger/Swashbuckle operation filter used to document the implicit API version parameter.
     /// </summary>
     public class SwaggerDefaultValues : IOperationFilter {
-        public void Apply(Operation operation, OperationFilterContext context) {
+        /// <summary>
+        /// Applies the filter to the specified operation using the given context.
+        /// </summary>
+        /// <param name="operation">The operation to apply the filter to.</param>
+        /// <param name="context">The current operation filter context.</param>
+        public void Apply(OpenApiOperation operation, OperationFilterContext context) {
             var apiDescription = context.ApiDescription;
-            var apiVersion = apiDescription.GetApiVersion();
-            var model = apiDescription.ActionDescriptor.GetApiVersionModel(Explicit | Implicit);
-            operation.Deprecated = model.DeprecatedApiVersions.Contains(apiVersion);
+            operation.Deprecated |= apiDescription.IsDeprecated();
             if (operation.Parameters == null) {
                 return;
             }
-            foreach (var parameter in operation.Parameters.OfType<NonBodyParameter>()) {
+            // REF: https://github.com/domaindrivendev/Swashbuckle.AspNetCore/issues/412
+            // REF: https://github.com/domaindrivendev/Swashbuckle.AspNetCore/pull/413
+            foreach (var parameter in operation.Parameters) {
                 var description = apiDescription.ParameterDescriptions.First(p => p.Name == parameter.Name);
                 if (parameter.Description == null) {
                     parameter.Description = description.ModelMetadata?.Description;
                 }
-                if (parameter.Default == null) {
-                    parameter.Default = description.DefaultValue;
+                if (parameter.Schema.Default == null && description.DefaultValue != null) {
+                    parameter.Schema.Default = new OpenApiString(description.DefaultValue.ToString());
                 }
                 parameter.Required |= description.IsRequired;
             }

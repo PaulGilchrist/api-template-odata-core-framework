@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace API.Classes {
     public class Security {
-        private IMemoryCache _cache;
-        private ApiDbContext _db;
+        private readonly IMemoryCache _cache;
+        private readonly ApiDbContext _db;
 
         public Security(ApiDbContext context, IMemoryCache memoryCache) {
             _cache = memoryCache;
