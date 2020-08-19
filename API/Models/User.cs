@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.OData.Builder;
+using Microsoft.AspNet.OData.Query;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 

@@ -120,7 +120,7 @@ namespace ODataCoreTemplate {
                 options.IncludeXmlComments(XmlCommentsFilePath);
                 //Configure Swagger to filter out $expand objects to improve performance for large highly relational APIs
                 options.SchemaFilter<SwaggerIgnoreFilter>();
-                options.DescribeAllEnumsAsStrings();
+                //options.DescribeAllEnumsAsStrings();
                 options.AddSecurityDefinition("Basic", new OpenApiSecurityScheme() { In = ParameterLocation.Header, Description = "Please insert Basic token into field", Name = "Authorization", Type = SecuritySchemeType.ApiKey });
                 options.OperationFilter<SwaggerDefaultValues>();
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement {
@@ -160,8 +160,8 @@ namespace ODataCoreTemplate {
         /// <param name="httpContextAccessor">Allows access to the HTTP context including request/response</param>
         /// <param name="modelBuilder">The <see cref="VersionedODataModelBuilder">model builder</see> used to create OData entity data models (EDMs).</param>
         /// <param name="provider">The API version descriptor provider used to enumerate defined API versions.</param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IHttpContextAccessor httpContextAccessor, VersionedODataModelBuilder modelBuilder, IApiVersionDescriptionProvider provider) {
-            if (env.IsDevelopment()) {
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor, VersionedODataModelBuilder modelBuilder, IApiVersionDescriptionProvider provider) {
+            if (env.EnvironmentName == "Development") {
                 app.UseDeveloperExceptionPage();
             } else {
                 app.UseHsts();
