@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNet.OData.Builder;
+using Microsoft.AspNet.OData.Query;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.Models {
 
+    [Select]
     public class AddressNote {
 
         /// <summary>
@@ -36,6 +38,7 @@ namespace API.Models {
     /// <summary>
     /// Represents an address.
     /// </summary>
+    [Select]
     public class Address {
         public Address() { }
 

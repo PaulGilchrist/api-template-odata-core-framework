@@ -7,6 +7,7 @@ namespace API.Models {
     /// <summary>
     /// Represents a user specific note.
     /// </summary>
+    [Select]
     public class UserNote {
         public UserNote() {}
 
@@ -33,6 +34,7 @@ namespace API.Models {
     /// <summary>
     /// Represents an address.
     /// </summary>
+    [Select]
     public class User {
         public User() { }
 
