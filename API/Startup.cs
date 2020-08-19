@@ -81,6 +81,9 @@ namespace ODataCoreTemplate {
 
             // Needed to load configuration from appsettings.json
             services.AddOptions();
+            // The following line enables Application Insights telemetry collection.
+            services.AddApplicationInsightsTelemetry();
+            services.AddSingleton<TelemetryTracker>();
             // Needed to store rate limit counters and ip rules
             services.AddMemoryCache(); services.AddMemoryCache();
             // Load general configuration from appsettings.json
@@ -150,7 +153,6 @@ namespace ODataCoreTemplate {
                 return factory.GetUrlHelper(actionContext);
             });
             services.AddSwaggerGenNewtonsoftSupport();
-            services.AddSingleton<TelemetryTracker>();
         }
 
         /// <summary>
