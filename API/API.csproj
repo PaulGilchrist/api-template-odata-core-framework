@@ -7,6 +7,8 @@
     <ApplicationInsightsResourceId>/subscriptions/6fddc491-7042-42fb-9cba-e956e9f79e6e/resourcegroups/ApiDev/providers/microsoft.insights/components/ApiDev3</ApplicationInsightsResourceId>
     <ApplicationInsightsAnnotationResourceId>/subscriptions/6fddc491-7042-42fb-9cba-e956e9f79e6e/resourcegroups/ApiDev/providers/microsoft.insights/components/ApiDev3</ApplicationInsightsAnnotationResourceId>
     <LangVersion>7.1</LangVersion>
+    <UserSecretsId>afb2cd24-2134-48db-98b7-e1c24cdeb339</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -38,6 +40,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.5.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="5.5.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="5.5.1" />

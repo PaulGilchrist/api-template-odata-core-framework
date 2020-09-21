@@ -67,13 +67,19 @@ namespace ODataCoreTemplate {
             });
             // Add Security
             services.AddSingleton<Security>();
+            Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
+            // ADAL uses v1.0 and MSAL uses v2.0
+            List<string> ValidIssuers = new List<string>();
+            ValidIssuers.Add("https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier"));
+            ValidIssuers.Add("https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier") + "/v2.0");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                // Configure OAuth Authentication
                .AddJwtBearer(options => {
-                   options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier");
+                   options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier") + "/v2.0";
                    options.TokenValidationParameters = new TokenValidationParameters
                    {
-                       ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(',')
+                       ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(','),
+                       ValidIssuers = ValidIssuers
                    };
                })
                 // Configure Basic Authentication

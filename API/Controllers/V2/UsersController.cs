@@ -3,6 +3,7 @@ using API.Configuration;
 using API.Models;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Routing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -92,7 +93,7 @@ namespace API.Controllers.V2 {
         [ProducesResponseType(typeof(IEnumerable<User>), 201)] // Created
         [ProducesResponseType(typeof(ModelStateDictionary), 400)] // Bad Request
         [ProducesResponseType(typeof(void), 401)] // Unauthorized
-        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme + ",BasicAuthentication", Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Post([FromBody] User user) {
             try {
                 Request.Body.Position = 0;
