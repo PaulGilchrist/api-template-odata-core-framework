@@ -76,14 +76,13 @@ namespace ODataCoreTemplate {
                // Configure OAuth Authentication
                .AddJwtBearer(options => {
                    options.Authority = "https://login.microsoftonline.com/" + Configuration.GetValue<string>("Security:TenantIdentifier") + "/v2.0";
-                   options.TokenValidationParameters = new TokenValidationParameters
-                   {
+                   options.TokenValidationParameters = new TokenValidationParameters {
                        ValidAudiences = Configuration.GetValue<string>("Security:AllowedAudiences").Split(','),
                        ValidIssuers = ValidIssuers
                    };
-               })
+               });
                 // Configure Basic Authentication
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
+                //.AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
 
             // Needed to load configuration from appsettings.json
             services.AddOptions();
